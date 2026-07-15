@@ -226,6 +226,11 @@
 .pl-bevel-well {
   border-color: var(--pl-bc-well);
 }
+/* Pressed = recessed bevel + the darker pressed face (matches a button held
+   down); Well keeps the normal face, so the two read differently. */
+.pl-bevel-pressed {
+  background-color: var(--pl-press);
+}
 
 /* ---- Tool palette: square bevel buttons butted into one strip ------------ */
 /* Wrap buttons in <div class="pl-palette">. Each KEEPS its own Platinum raised

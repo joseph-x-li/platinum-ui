@@ -132,7 +132,17 @@ pub fn PlatinumScroll(children: Children) -> impl IntoView {
                 // height tracks the content (the view's own height is fixed).
                 <div node_ref=content_ref>{children()}</div>
             </div>
-            <div class="pl-scrollbar" class:pl-scrollbar-hidden=move || !scrollable()>
+            <div
+                class="pl-scrollbar"
+                class:pl-scrollbar-hidden=move || !scrollable()
+                // Native scrollbars scroll the content when you wheel over them;
+                // this bar is a separate element, so forward its wheel to the view.
+                on:wheel=move |e: ev::WheelEvent| {
+                    if let Some(view) = view_ref.get_untracked() {
+                        view.set_scroll_top(view.scroll_top() + e.delta_y() as i32);
+                    }
+                }
+            >
                 <button
                     type="button"
                     class="pl-scroll-arrow pl-scroll-up"
