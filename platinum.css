@@ -1,0 +1,634 @@
+/* platinum-ui — the Mac OS Platinum design system (tokens + bevels + custom
+   components). Consumed by an app that provides Tailwind: the app's stylesheet
+   does `@import "tailwindcss";` then `@import ".../platinum.css";` and adds this
+   crate's `src` to Tailwind's `@source` scan so the utility classes the
+   components emit get generated. */
+
+/* ============================================================
+   Tailwind v4 theme mapping — makes the shadcn CSS vars below
+   drive the utility classes the app uses (bg-*, text-*, border-*,
+   rounded-*). WITHOUT this block those utilities don't pick up the
+   tokens, and without @import "tailwindcss" no utilities exist at all.
+   ============================================================ */
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  /* Monaco — the canonical classic-Mac monospace — for all font-mono text */
+  --font-mono: "Monaco", "Menlo", ui-monospace, SFMono-Regular, monospace;
+  /* every radius step follows --radius (0 = square) */
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius);
+  --radius-xl: var(--radius);
+  --radius-2xl: var(--radius);
+}
+
+/* ============================================================
+   platinum.css — Mac OS 8/9 "Platinum" reskin, ADAPTED to this
+   project (Leptos + rust-ui / leptos_ui):
+     - components emit  data-name="Button" / "DialogContent"  (NOT data-slot)
+     - cards/fields are plain Tailwind elements, so bevels use element
+       selectors (input, select, textarea, hr) instead of data-slot.
+   Two layers: TOKENS (recolor via shadcn vars) + BEVELS (chiseled edges).
+   ============================================================ */
+
+/* ---- helper values (not shadcn tokens) -------------------- */
+:root {
+  --pl-face:      #dddddd;   /* control + panel face gray      */
+  --pl-face-alt:  #cccccc;   /* recessed / secondary surfaces  */
+  --pl-window:    #ffffff;   /* document / content area        */
+  --pl-highlight: #ffffff;   /* top-left bevel edge            */
+  --pl-shadow:    #808080;   /* bottom-right bevel edge         */
+  --pl-outline:   #555555;   /* hard 1px outer outline          */
+  --pl-press:     #c6c6c2;   /* pressed face                    */
+  --pl-purple:      #8e5ba6; /* Platinum accent purple (scroll thumb)   */
+  --pl-purple-hi:   #c1a5cf; /* light lavender — purple bevel highlight */
+  --pl-purple-lo:   #553764; /* deep purple  — purple bevel shadow      */
+  --pl-purple-press:#7a4f8f; /* pressed purple face (thumb while dragging) */
+
+  /* Bevel width (small, the app default). Override --pl-bw on a container to
+     resize every bevel inside it (the /components size selector does this). */
+  --pl-bw: 2px;
+  /* Mitered bevel = per-side border colours. CSS borders miter at 45° corners,
+     which box-shadow bands can't. T R B L order: raised = light top/left, dark
+     bottom/right; pressed/well = the inverse. */
+  --pl-bc-raised: var(--pl-highlight) var(--pl-shadow) var(--pl-shadow) var(--pl-highlight);
+  --pl-bc-well:   var(--pl-shadow) var(--pl-highlight) var(--pl-highlight) var(--pl-shadow);
+  /* 1px dark outer outline drawn OUTSIDE the bevel (doesn't affect layout). */
+  --pl-outline-ring: 0 0 0 1px var(--pl-outline);
+
+  /* 1px bevels as box-shadow (for controls that keep their border for the black
+     outline): raised = light top-left, well/pressed = the inverse. Used by the
+     scrollbar parts and the popup-menu arrow. */
+  --pl-raised-thin:
+    inset  1px  1px 0 var(--pl-highlight),
+    inset -1px -1px 0 var(--pl-shadow);
+  --pl-well-thin:
+    inset  1px  1px 0 var(--pl-shadow),
+    inset -1px -1px 0 var(--pl-highlight);
+}
+
+/* ---- 1. TOKEN LAYER --------------------------------------- */
+/* Neutral OKLCH grayscale + one navy for focus. Light-only look, so
+   .dark mirrors the same grays. Non-layered so these win over the
+   Tailwind base. */
+:root,
+.dark {
+  --radius: 0rem;
+  --font-sans: "Geneva", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  --background:            oklch(0.905 0 0);   /* desktop gray     */
+  --foreground:            oklch(0 0 0);        /* black text       */
+  --card:                  oklch(0.888 0 0);   /* face gray        */
+  --card-foreground:       oklch(0 0 0);
+  --popover:               oklch(0.888 0 0);
+  --popover-foreground:    oklch(0 0 0);
+  --primary:               oklch(0.888 0 0);   /* gray button face */
+  --primary-foreground:    oklch(0 0 0);        /* black label      */
+  --secondary:             oklch(0.831 0 0);
+  --secondary-foreground:  oklch(0 0 0);
+  --muted:                 oklch(0.831 0 0);
+  --muted-foreground:      oklch(0.35 0 0);
+  --accent:                oklch(0.831 0 0);
+  --accent-foreground:     oklch(0 0 0);
+  --border:                oklch(0.443 0 0);   /* #555 hairline    */
+  --input:                 oklch(0.443 0 0);
+  --ring:                  oklch(0.42 0.12 264); /* Platinum navy  */
+
+  /* Functional colors the palette above omits — the app uses these
+     (bg-destructive "no signal", success/warning text). Keep readable. */
+  --destructive:            oklch(0.55 0.20 27);   /* Mac error red */
+  --destructive-foreground: oklch(1 0 0);
+  --warning:                oklch(0.72 0.13 75);
+  --warning-foreground:     oklch(0 0 0);
+  --success:                oklch(0.60 0.13 150);
+  --success-foreground:     oklch(1 0 0);
+}
+
+/* ---- 2. BEVEL LAYER --------------------------------------- */
+/* !important defeats the Tailwind utilities baked into each component
+   (rounded-*, shadow-*, bg-*). Selectors rewired to this app's markup. */
+
+/* Raised controls: buttons (data-name="Button") + <select> popups */
+[data-name="Button"],
+select {
+  border-radius: 0 !important;
+  border-style: solid !important;
+  border-width: var(--pl-bw) !important;
+  border-color: var(--pl-bc-raised) !important;
+  box-shadow: var(--pl-outline-ring) !important;
+  background-color: var(--pl-face) !important;
+  color: #000 !important;
+  transition: none !important;
+}
+
+/* The native dropdown arrow sits hard against the edge and ignores padding, so
+   it crowds the medium bevel. Replace it with our own triangle we can position
+   (the popup menu itself stays native). */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6'%3E%3Cpath d='M0 0h8L4 6z' fill='%23555555'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  /* appearance:none drops the native padding, so give every select consistent
+     padding here (left for text, extra right for the custom arrow) instead of
+     depending on per-markup px-* classes. */
+  padding: 0.25rem 1.75rem 0.25rem 0.6rem !important;
+}
+
+/* Pressed = invert the bevel + darken the face */
+[data-name="Button"]:active,
+select:active,
+/* Native selects open their menu on mousedown (esp. macOS) so :active barely
+   paints — .pl-open (toggled by a script in index.html) shows the depress while
+   the menu is open and clears it the moment an item is picked or it's dismissed
+   (plain :focus would leave it stuck depressed until you clicked elsewhere). */
+select.pl-open {
+  border-color: var(--pl-bc-well) !important;
+  background-color: var(--pl-press) !important;
+}
+
+/* A nav button for the current route sits "pushed in" (selected). */
+[data-name="Button"][aria-current="page"] {
+  border-color: var(--pl-bc-well) !important;
+  background-color: var(--pl-press) !important;
+}
+
+/* Raised toolbar — the top header bar lifts off the page with a hard black
+   outline around its raised bevel.
+   The black is a real 1px border (not an outer box-shadow ring): the header
+   fills the viewport width and sits flush to the top, so an outer ring would
+   clip against the edges / get painted over by <main>. A border lives inside
+   the box, so every edge stays visible.
+   The raised bevel rides just inside the black on a ::after pseudo-element,
+   using MITERED per-side border-colors (--pl-bc-raised) — same as buttons.
+   Real borders miter at 45° corners; inset box-shadow bands would overlap into
+   a square notch at each corner instead. */
+.pl-toolbar {
+  position: relative;
+  border: 1px solid #000 !important;
+  box-shadow: none !important;
+  background-color: var(--pl-face) !important;
+}
+.pl-toolbar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: var(--pl-bw) solid;
+  border-color: var(--pl-bc-raised);
+  pointer-events: none;
+}
+
+/* ---- Platinum folder tabs ------------------------------------------------ */
+/* Beveled tabs sitting on the content pane's top edge: the active tab lifts to
+   the front and connects to the pane; inactive tabs sit lower and recede. */
+.pl-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+}
+.pl-tab {
+  padding: 4px 14px;
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  color: #000;
+  cursor: pointer;
+  position: relative;
+  top: 2px;                      /* inactive tabs sit lower / behind */
+  border: 1px solid var(--pl-outline);
+  border-bottom: none;
+  background-color: var(--pl-face-alt);
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.45);
+}
+.pl-tab:hover {
+  background-color: var(--pl-face);
+}
+.pl-tab-active {
+  top: 0;                        /* active tab lifts to the front */
+  z-index: 1;
+  font-weight: 600;
+  background-color: var(--pl-face);
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* Reusable mitered-bevel surfaces (used by the /components swatches). */
+.pl-bevel-raised,
+.pl-bevel-pressed,
+.pl-bevel-well {
+  border-style: solid;
+  border-width: var(--pl-bw);
+  box-shadow: var(--pl-outline-ring);
+  background-color: var(--pl-face);
+}
+.pl-bevel-raised {
+  border-color: var(--pl-bc-raised);
+}
+.pl-bevel-pressed,
+.pl-bevel-well {
+  border-color: var(--pl-bc-well);
+}
+
+/* ---- Tool palette: square bevel buttons butted into one strip ------------ */
+/* Wrap buttons in <div class="pl-palette">. Each KEEPS its own Platinum raised
+   bevel (so it reads as a button); they're square, equal-size, and share edges
+   like a classic Mac tool palette. A <Dialog> wraps its trigger in a
+   div[data-name="__Dialog"], hence the reach-in selector + margin collapse. */
+.pl-palette {
+  display: inline-flex;
+  gap: 1px;                             /* 1px gaps show the dark bg = dividers */
+  background-color: var(--pl-outline);  /* black lines between cells + behind    */
+  box-shadow: var(--pl-outline-ring);   /* outer frame around the whole strip     */
+}
+/* Every cell drops its own outline ring — the strip provides the frame and the
+   1px gaps provide the black dividers. Scoped to DIRECT children + the dialog
+   trigger so it doesn't reach into dialog content (a DOM descendant). */
+.pl-palette > [data-name="Button"],
+.pl-palette > [data-name="__Dialog"] > [data-name="Button"] {
+  box-shadow: none !important;
+}
+.pl-palette > [data-name="__Dialog"] {
+  display: flex;
+}
+/* Icon palettes (camera controls, demo): square, equal-size cells. Text
+   palettes (the header nav) omit this and keep their natural width. */
+.pl-palette-icons > [data-name="Button"],
+.pl-palette-icons > [data-name="__Dialog"] > [data-name="Button"] {
+  width: 1.75rem !important;
+  height: 1.75rem !important;
+  padding: 0 !important;
+}
+
+/* Engraved wells: framed div "cards". Scoped to div[...] so the also-bordered
+   <select>/<input>/<button> don't get the recessed well look. The
+   "border border-border" substring (all-sides border) excludes single-side
+   dividers like "border-t border-border" (header, label bars). */
+div[class*="border border-border"] {
+  border-radius: 0 !important;
+  border-style: solid !important;
+  border-width: var(--pl-bw) !important;
+  border-color: var(--pl-bc-well) !important;
+  box-shadow: var(--pl-outline-ring) !important;
+  background-color: var(--pl-face) !important;
+}
+
+/* Classic Mac dialogs snap in/out — kill the smooth fade+scale transition on
+   both the window and its backdrop so they appear/disappear instantly. */
+[data-name="DialogContent"],
+[data-name="DialogBackdrop"] {
+  transition: none !important;
+}
+
+/* Lock the scroll pane while a dialog is open (the fixed backdrop alone doesn't
+   stop wheel-scrolling the pane behind it). The custom scroller is the inner
+   .pl-scroll-view now. */
+body:has([data-name="DialogContent"][data-state="open"]) .pl-scroll-view {
+  overflow: hidden !important;
+}
+
+/* Modal dialog window: a RAISED panel (chiseled bevel) with the classic Mac OS
+   8/9 hard-edged drop shadow — a crisp solid offset, NOT a soft Aqua blur. */
+[data-name="DialogContent"] {
+  border-radius: 0 !important;
+  border-style: solid !important;
+  border-width: var(--pl-bw) !important;
+  border-color: var(--pl-bc-raised) !important;
+  background-color: var(--pl-face) !important;
+  box-shadow:
+    var(--pl-outline-ring),
+    4px 4px 0 0 rgba(0, 0, 0, 0.35) !important;
+}
+
+/* Camera preview screen: a shallow recessed well (hard-edged, no blur) so the
+   video reads as set into the device panel — restrained Platinum content well.
+   Stitch previews keep the bare-black look (they don't get .pl-screen). */
+.pl-screen {
+  box-shadow:
+    inset 1px 1px 0 rgba(0, 0, 0, 0.85),
+    inset -1px -1px 0 rgba(255, 255, 255, 0.16) !important;
+}
+
+/* Text fields = recessed wells with a white paper interior */
+input:not([type="checkbox"]):not([type="radio"]),
+textarea {
+  border-radius: 0 !important;
+  border-style: solid !important;
+  border-width: var(--pl-bw) !important;
+  border-color: var(--pl-bc-well) !important;
+  box-shadow: var(--pl-outline-ring) !important;
+  background-color: var(--pl-window) !important;
+  color: #000 !important;
+}
+
+/* Checkboxes / radios: square wells. appearance:none kills the native control
+   (whose own rounded box + accent-color was peeking through) so we can draw the
+   square box and the check ourselves. */
+input[type="checkbox"],
+input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  position: relative;
+  vertical-align: -2px;
+  border-radius: 0 !important;
+  border: 1px solid var(--pl-outline) !important;
+  box-shadow: var(--pl-well-thin) !important;
+  background-color: var(--pl-window) !important;
+  cursor: pointer;
+}
+/* classic check (drawn with borders — crisp, no font dependency) */
+input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid #000;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+/* radio: filled square center (Platinum square style) */
+input[type="radio"]:checked::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  background: #000;
+}
+
+/* Engraved separator: dark line then white line = carved groove */
+hr {
+  background: transparent !important;
+  border: 0 !important;
+  height: 2px !important;
+  border-top: 1px solid var(--pl-shadow) !important;
+  border-bottom: 1px solid var(--pl-highlight) !important;
+}
+
+/* Focus: keep the bevel, add a hard period outline (never invisible) */
+[data-name="Button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--ring) !important;
+  outline-offset: 1px;
+}
+
+/* ---- Platinum scrollbars -------------------------------------------------- */
+/* Recessed channel + raised draggable thumb + a beveled arrow button at each
+   end (up/down for vertical, left/right for horizontal) — the classic Mac OS
+   8/9 scrollbar. Applies to any overflow-scroll element: the main content pane,
+   textareas, the file list, etc.
+
+   NOTE: do NOT set the standard `scrollbar-width`/`scrollbar-color` here —
+   Chrome 121+ honors them and, when present, IGNORES the ::-webkit-scrollbar
+   pseudo-elements below (giving a thin overlay bar with no arrows). WebKit/Blink
+   custom scrollbars are the only way to get the beveled arrows, so we rely on
+   them alone; Firefox just falls back to its default scrollbar. */
+::-webkit-scrollbar { width: 16px; height: 16px; }
+
+/* Scrollbar parts can't take a ::after pseudo-element (the trick the header
+   uses for black-outline + mitered-bevel at once), and each part has only ONE
+   border. So the black outline HAS to be that border: a real in-box border
+   shows on all four sides, whereas an outer box-shadow ring gets clipped on the
+   thumb's left/right edges (it fills the 16px bar) and paints a frame inside the
+   track. The bevel then rides just inside the black as a 1px inset highlight/
+   shadow. At 1px the corners are a single pixel, so there's no visible miter. */
+
+/* The channel the thumb rides in: a shallow recessed well (no black frame). */
+::-webkit-scrollbar-track {
+  background: var(--pl-face-alt);
+  box-shadow: var(--pl-well-thin);
+}
+
+/* Raised draggable thumb: hard black border (all four sides) + raised bevel. */
+::-webkit-scrollbar-thumb {
+  background: var(--pl-face);
+  border: 1px solid #000;
+  box-shadow: var(--pl-raised-thin);
+  min-height: 24px;
+  min-width: 24px;
+}
+/* Pressed while you click-and-drag it: invert the bevel to a well + darken the
+   face, so the thumb visibly depresses under the pointer. */
+::-webkit-scrollbar-thumb:active {
+  box-shadow: var(--pl-well-thin);
+  background: var(--pl-press);
+}
+
+/* Arrow buttons: black-bordered beveled squares with a black triangle glyph,
+   one at each end. The `:single-button` combinator is REQUIRED — without it
+   Chrome renders no buttons at all for a custom scrollbar. Everything else is
+   hidden so we never get the reversed double-button slots. */
+::-webkit-scrollbar-button { display: none; }
+
+::-webkit-scrollbar-button:single-button {
+  display: block;
+  width: 16px;
+  height: 16px;
+  background-color: var(--pl-face);
+  border: 1px solid #000;
+  box-shadow: var(--pl-raised-thin);
+  background-repeat: no-repeat;
+  background-position: center;
+}
+::-webkit-scrollbar-button:single-button:active {
+  box-shadow: var(--pl-well-thin);
+  background-color: var(--pl-press);
+}
+::-webkit-scrollbar-button:single-button:vertical:decrement {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='7'%3E%3Cpath d='M0 7h9L4.5 0z' fill='%23000'/%3E%3C/svg%3E");
+}
+::-webkit-scrollbar-button:single-button:vertical:increment {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='7'%3E%3Cpath d='M0 0h9L4.5 7z' fill='%23000'/%3E%3C/svg%3E");
+}
+::-webkit-scrollbar-button:single-button:horizontal:decrement {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='9'%3E%3Cpath d='M7 0v9L0 4.5z' fill='%23000'/%3E%3C/svg%3E");
+}
+::-webkit-scrollbar-button:single-button:horizontal:increment {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='9'%3E%3Cpath d='M0 0v9L7 4.5z' fill='%23000'/%3E%3C/svg%3E");
+}
+/* Square where a vertical + horizontal bar meet. */
+::-webkit-scrollbar-corner { background: var(--pl-face-alt); }
+
+/* ---- Custom DOM scrollbar (PlatinumScroll) ------------------------------- */
+/* Real arrow buttons + a draggable purple thumb, since CSS scrollbar buttons
+   don't render on macOS Chrome. The inner view scrolls with its native bar
+   hidden; this bar is painted from DOM elements. */
+.pl-scroll { display: flex; height: 100%; min-height: 0; }
+
+.pl-scroll-view {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  scrollbar-width: none;               /* Firefox: hide native bar */
+}
+.pl-scroll-view::-webkit-scrollbar { display: none; }   /* Chrome: hide native bar */
+
+.pl-scrollbar {
+  flex: none;
+  width: 16px;
+  display: flex;
+  flex-direction: column;
+  background: var(--pl-face-alt);
+  border-left: 1px solid #000;         /* hard black edge against the content */
+}
+/* Removed from layout when the content fits (content pane reclaims the width). */
+.pl-scrollbar-hidden { display: none; }
+
+/* Arrow buttons at each end: raised, black-bordered, with a triangle glyph. */
+.pl-scroll-arrow {
+  flex: none;
+  height: 16px;
+  padding: 0;
+  border: 1px solid #000;
+  background-color: var(--pl-face);
+  background-repeat: no-repeat;
+  background-position: center;
+  box-shadow: var(--pl-raised-thin);
+  cursor: pointer;
+}
+.pl-scroll-arrow:active {
+  box-shadow: var(--pl-well-thin);
+  background-color: var(--pl-press);
+}
+.pl-scroll-up {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='7'%3E%3Cpath d='M0 7h9L4.5 0z' fill='%23000'/%3E%3C/svg%3E");
+}
+.pl-scroll-down {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='7'%3E%3Cpath d='M0 0h9L4.5 7z' fill='%23000'/%3E%3C/svg%3E");
+}
+
+/* The channel the thumb rides in. */
+.pl-scroll-track { position: relative; flex: 1 1 auto; min-height: 0; }
+
+/* Draggable purple scroll box, raised with a black border. */
+.pl-scroll-thumb {
+  position: absolute;
+  left: 0;
+  right: 0;
+  min-height: 20px;
+  background: var(--pl-purple);
+  border: 1px solid #000;
+  box-shadow:
+    inset  1px  1px 0 var(--pl-purple-hi),
+    inset -1px -1px 0 var(--pl-purple-lo);
+  cursor: pointer;
+}
+/* Pressed while dragging: invert the bevel + darken the face. */
+.pl-scroll-thumb:active {
+  background: var(--pl-purple-press);
+  box-shadow:
+    inset  1px  1px 0 var(--pl-purple-lo),
+    inset -1px -1px 0 var(--pl-purple-hi);
+}
+
+/* ---- Platinum popup menu (custom select) --------------------------------- */
+/* A hand-drawn replacement for the native <select>: a raised trigger with the
+   classic beveled down-arrow box, plus a white overlay menu. */
+.pl-select { position: relative; display: inline-block; }
+
+/* The container is a recessed WELL that just displays the current value — it is
+   not clickable. Only the arrow button (below) opens the menu. */
+.pl-select-field {
+  display: inline-flex;
+  align-items: stretch;
+  min-width: 130px;
+  font-size: 0.875rem;
+  color: #000;
+  background-color: var(--pl-face);
+  border: 1px solid #000;
+  box-shadow: var(--pl-well-thin);
+}
+
+.pl-select-label {
+  flex: 1;
+  padding: 3px 12px;
+  text-align: left;
+  align-self: center;
+  white-space: nowrap;
+}
+
+/* The one clickable part: a raised, black-bordered arrow button that toggles
+   the menu, inset slightly so the well's recess reads around it. */
+.pl-select-arrow {
+  flex: none;
+  width: 20px;
+  margin: 2px;
+  padding: 0;
+  border: 1px solid #000;
+  background-color: var(--pl-face);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6'%3E%3Cpath d='M0 0h9L4.5 6z' fill='%23000'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  box-shadow: var(--pl-raised-thin);
+  cursor: pointer;
+}
+/* Pressed while the menu is open / on click. */
+.pl-select-arrow:active {
+  box-shadow: var(--pl-well-thin);
+  background-color: var(--pl-press);
+}
+
+/* Full-viewport click catcher so an outside click dismisses the menu. */
+.pl-select-backdrop { position: fixed; inset: 0; z-index: 40; }
+
+/* The white menu overlays the trigger, Mac-style. */
+.pl-select-menu {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  z-index: 50;
+  min-width: calc(100% + 2px);
+  margin: 0;
+  padding: 2px;
+  list-style: none;
+  background-color: var(--pl-window);
+  border: 1px solid #000;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35);
+}
+
+.pl-select-option {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 14px 3px 4px;
+  font-size: 0.875rem;
+  line-height: 1.3;
+  color: #000;
+  white-space: nowrap;
+  cursor: pointer;
+}
+/* Inverted highlight, the way a Platinum menu tracks the pointer. */
+.pl-select-option:hover { background-color: #000; color: #fff; }
+
+.pl-select-check { width: 14px; text-align: center; flex: none; }
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--background);
+  color: var(--foreground);
+}
