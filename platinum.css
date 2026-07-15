@@ -468,6 +468,7 @@ textarea:focus-visible {
   overflow-y: scroll;
   overflow-x: hidden;
   scrollbar-width: none;               /* Firefox: hide native bar */
+  overscroll-behavior: none;           /* kill the rubber-band bounce at the ends */
 }
 .pl-scroll-view::-webkit-scrollbar { display: none; }   /* Chrome: hide native bar */
 
