@@ -133,63 +133,56 @@
 /* !important defeats the Tailwind utilities baked into each component
    (rounded-*, shadow-*, bg-*). Selectors rewired to this app's markup. */
 
-/* Raised controls: buttons (data-name="Button"). Dropdowns use the custom
-   PlatinumSelect component, not native <select>. */
-[data-name="Button"] {
-  border-radius: 0 !important;
-  border-style: solid !important;
-  border-width: var(--pl-bw) !important;
-  border-color: var(--pl-bc-raised) !important;
-  box-shadow: var(--pl-outline-ring) !important;
-  background-color: var(--pl-face) !important;
-  color: #000 !important;
-  transition: none !important;
-}
-
-/* Pressed = invert the bevel + darken the face */
-[data-name="Button"]:active {
-  border-color: var(--pl-bc-well) !important;
-  background-color: var(--pl-press) !important;
-}
-
-/* A nav button for the current route sits "pushed in" (selected). */
-[data-name="Button"][aria-current="page"] {
-  border-color: var(--pl-bc-well) !important;
-  background-color: var(--pl-press) !important;
-}
-
-/* ---- Raised platform — the dual of the well ------------------------------ */
-/* A large raised surface that lifts off the page and holds content (dual of
-   .pl-well). The outline is a 1px --pl-outline (#555) REAL border, not an outer
-   ring: these surfaces fill the viewport and sit flush to its edges, where an
-   outer ring would clip / get painted over. A border lives inside the box, so
-   every edge stays visible. The same #555 is the system's one outline color —
-   the well draws it inset, the button as a ring, the platform as this border.
-   The mitered raised bevel (--pl-bc-raised, same as buttons) rides just inside
-   it on ::after — real borders miter at 45° corners, which inset box-shadow
-   bands can't. Applied directly (as a class) to the toolbar and the content
-   panel. */
+/* ---- Raised, outlined surface (buttons + platform) ----------------------- */
+/* One shared construction for every raised surface: a 1px --pl-outline (#555)
+   REAL border for the outline + the mitered raised bevel (--pl-bc-raised) on
+   ::after. Using a real border rather than an outer ring means the outline lives
+   INSIDE the box — it never clips at a flush edge, and any single edge can be
+   dropped with a .pl-seam-* modifier (below) to merge into a neighbor's outline.
+   .pl-bevel-platform is the container form (toolbar, content panel) and the raised
+   dual of .pl-well. Buttons are data-name="Button" (dropdowns use PlatinumSelect,
+   not <select>). */
+[data-name="Button"],
 .pl-bevel-platform {
   position: relative;
+  border-radius: 0 !important;
   border: 1px solid var(--pl-outline) !important;
   box-shadow: none !important;
   background-color: var(--pl-face) !important;
+  transition: none !important;
 }
+[data-name="Button"] { color: #000 !important; }
+[data-name="Button"]::after,
 .pl-bevel-platform::after {
   content: "";
   position: absolute;
   inset: 0;
   border: var(--pl-bw) solid;
-  border-color: var(--pl-bc-raised);
+  border-color: var(--pl-bc-raised);   /* 4-value mitered color — must be its own
+                                          declaration; the border shorthand only
+                                          takes a single color */
   pointer-events: none;
 }
-/* Merge this platform's top edge into the surface directly above it (e.g. the
-   content panel under the toolbar): drop the top OUTLINE so the neighbor's
-   outline is the single shared line — the raised ::after bevel stays. Same trick
-   as the dropdown arrow declining its well-facing outlines. */
-.pl-bevel-platform.pl-seam-top {
-  border-top: 0 !important;
+/* Pressed button / current-route nav button = inverted bevel + darker face. */
+[data-name="Button"]:active,
+[data-name="Button"][aria-current="page"] {
+  background-color: var(--pl-press) !important;
 }
+[data-name="Button"]:active::after,
+[data-name="Button"][aria-current="page"]::after {
+  border-color: var(--pl-bc-well);
+}
+
+/* ---- Seam modifiers ------------------------------------------------------ */
+/* Drop the outline on an edge that abuts a neighbor whose own outline is the
+   shared line, so the two never double up into a 2px seam. First-class across
+   every raised surface above — buttons and platforms alike (e.g. the content
+   panel's .pl-seam-top merges into the toolbar). Only the flat outline is
+   dropped; the raised ::after bevel stays. */
+.pl-seam-top    { border-top-width: 0 !important; }
+.pl-seam-right  { border-right-width: 0 !important; }
+.pl-seam-bottom { border-bottom-width: 0 !important; }
+.pl-seam-left   { border-left-width: 0 !important; }
 
 /* ---- Platinum folder tabs ------------------------------------------------ */
 /* Beveled tabs sitting on the content pane's top edge: the active tab lifts to
@@ -291,12 +284,12 @@ textarea {
   background-color: var(--pl-outline);  /* black lines between cells + behind    */
   box-shadow: var(--pl-outline-ring);   /* outer frame around the whole strip     */
 }
-/* Every cell drops its own outline ring — the strip provides the frame and the
-   1px gaps provide the black dividers. Scoped to DIRECT children + the dialog
-   trigger so it doesn't reach into dialog content (a DOM descendant). */
+/* Every cell drops its own outline border — the strip provides the frame and the
+   1px gaps provide the dividers (the raised ::after bevel stays). Scoped to DIRECT
+   children + the dialog trigger so it doesn't reach into dialog content. */
 .pl-palette > [data-name="Button"],
 .pl-palette > [data-name="__Dialog"] > [data-name="Button"] {
-  box-shadow: none !important;
+  border-width: 0 !important;
 }
 .pl-palette > [data-name="__Dialog"] {
   display: flex;
