@@ -10,22 +10,36 @@
 
 use leptos::context::Provider;
 use leptos::prelude::*;
-use leptos_ui::clx;
 use std::sync::atomic::{AtomicU64, Ordering};
-use tw_merge::*;
 
+use crate::classes;
 use crate::ui_button::{Button, ButtonSize, ButtonVariant};
 
-mod components {
-    use super::*;
-    clx! {DialogBody, div, "flex flex-col gap-4"}
-    clx! {DialogHeader, div, "flex flex-col gap-2 text-center sm:text-left"}
-    clx! {DialogTitle, h3, "text-lg leading-none font-semibold"}
-    clx! {DialogDescription, p, "text-muted-foreground text-sm"}
-    clx! {DialogFooter, footer, "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"}
+// Simple layout wrappers: an element with a base class list, a merge-in class
+// prop, and a data-name for DOM readability. Hand-rolled stand-in for the
+// leptos_ui::clx! macro so classes join by plain concatenation (see
+// crate::classes for why tw_merge is banned here).
+macro_rules! wrapper {
+    ($name:ident, $element:ident, $base:literal) => {
+        #[component]
+        pub fn $name(
+            #[prop(into, optional)] class: String,
+            children: Children,
+        ) -> impl IntoView {
+            view! {
+                <$element class=classes($base, &class) data-name=stringify!($name)>
+                    {children()}
+                </$element>
+            }
+        }
+    };
 }
 
-pub use components::*;
+wrapper! {DialogBody, div, "flex flex-col gap-4"}
+wrapper! {DialogHeader, div, "flex flex-col gap-2 text-center sm:text-left"}
+wrapper! {DialogTitle, h3, "text-lg leading-none font-semibold"}
+wrapper! {DialogDescription, p, "text-muted-foreground text-sm"}
+wrapper! {DialogFooter, footer, "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"}
 
 /* ========================================================== */
 /*                     ✨ FUNCTIONS ✨                        */
@@ -51,7 +65,7 @@ pub fn Dialog(children: Children, #[prop(optional, into)] class: String) -> impl
         target_id: dialog_target_id,
     };
 
-    let merged_class = tw_merge!("w-fit", class);
+    let merged_class = classes("w-fit", &class);
 
     view! {
         <Provider value=ctx>
@@ -66,7 +80,7 @@ pub fn Dialog(children: Children, #[prop(optional, into)] class: String) -> impl
 pub fn DialogTrigger(
     children: Children,
     #[prop(optional, into)] class: String,
-    #[prop(default = ButtonVariant::Outline)] variant: ButtonVariant,
+    #[prop(default = ButtonVariant::Default)] variant: ButtonVariant,
     #[prop(default = ButtonSize::Default)] size: ButtonSize,
 ) -> impl IntoView {
     let ctx = expect_context::<DialogContext>();
@@ -99,9 +113,12 @@ pub fn DialogContent(
     // skin owns the visuals (face, outline border, bevel, hard shadow), and
     // classic Mac dialogs snap open/closed, so there are no transition, radius,
     // shadow, or color utilities here — they'd be dead on arrival.
-    let merged_class = tw_merge!(
-        "p-6 w-full max-w-[calc(100%-2rem)] max-h-[85vh] fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] z-100 data-[state=closed]:opacity-0 data-[state=open]:opacity-100",
-        class
+    // w-[calc(100%-2rem)] (not w-full + max-w-calc): callers pass their own
+    // max-w-*, and width-plus-max-width composes as min() with no property
+    // conflict — plain class concatenation needs no merger to arbitrate.
+    let merged_class = classes(
+        "p-6 w-[calc(100%-2rem)] max-h-[85vh] fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] z-100 data-[state=closed]:opacity-0 data-[state=open]:opacity-100",
+        &class,
     );
 
     let backdrop_data_name = format!("{}Backdrop", data_name_prefix);
@@ -240,7 +257,7 @@ pub fn DialogContent(
 pub fn DialogClose(
     children: Children,
     #[prop(optional, into)] class: String,
-    #[prop(default = ButtonVariant::Outline)] variant: ButtonVariant,
+    #[prop(default = ButtonVariant::Default)] variant: ButtonVariant,
     #[prop(default = ButtonSize::Default)] size: ButtonSize,
 ) -> impl IntoView {
     let ctx = expect_context::<DialogContext>();

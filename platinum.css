@@ -194,8 +194,12 @@
    <select>), .pl-platform (the container form, raised dual of .pl-well),
    and the custom scrollbar / popup-menu arrow buttons. The scroll thumb and the
    modal dialog join only the ::after bevel rules: the thumb is an outline-less
-   purple brick, and the dialog is fixed-positioned with its own drop shadow. */
-[data-name="Button"],
+   purple brick, and the dialog is fixed-positioned with its own drop shadow.
+   The :not(.pl-plaque) guard makes plaque buttons structural, not positional:
+   a button wearing pl-plaque (ButtonVariant::Plaque) simply never joins this
+   raised dressing, so the well group below wins by construction — no reliance
+   on which block happens to come later in the file. */
+[data-name="Button"]:not(.pl-plaque),
 .pl-platform,
 .pl-scroll-arrow,
 .pl-select-arrow {
@@ -244,6 +248,22 @@
   border-color: var(--pl-bc-well);
 }
 
+/* Disabled: only the face content and the platform bevel dim. The outline —
+   and on a plaque button, the well bevel + inset ring too — stays at full
+   strength, so the control keeps its crisp footprint (this is why the Button
+   base has no disabled:opacity-* utility: whole-box opacity would fade those
+   frame parts along with the face). Label via color (a bare text node), icon
+   children via opacity, the ::after platform bevel via its own opacity. */
+[data-name="Button"]:disabled {
+  color: var(--pl-shadow) !important;
+}
+[data-name="Button"]:disabled > * {
+  opacity: 0.5;
+}
+[data-name="Button"]:disabled::after {
+  opacity: 0.5;
+}
+
 /* ---- Seam modifiers ------------------------------------------------------ */
 /* Drop the outline on an edge that abuts a neighbor whose own outline is the
    shared line, so the two never double up into a 2px seam. First-class across
@@ -264,7 +284,15 @@
    Since a plaque always has the platform directly inside, no inner element or
    seam classes are needed: <div class="pl-plaque p-4">…</div>. Like every other
    bevel the decoration is paint-only — give content enough padding to clear
-   the ring + bevel. */
+   the ring + bevel.
+   Buttons can wear it too (ButtonVariant::Plaque emits this class): the
+   raised-surface block above excludes .pl-plaque buttons outright (its
+   :not() guard), so the well group below dresses them uncontested; the shared
+   :active rules still darken the face and invert only the ::after — i.e. the
+   seated platform presses while the surrounding well stays put, exactly the
+   right press behavior. NOT supported inside a .pl-palette (the strip zeroes
+   its cells' borders at higher specificity, killing the well frame) — put
+   .pl-palette-plaque on the strip instead. */
 .pl-plaque {
   position: relative;
 }
@@ -317,6 +345,7 @@
    class selectors. */
 .pl-well,
 .pl-plaque,
+.pl-palette-plaque,
 .pl-select-field,
 input:not([type="checkbox"]):not([type="radio"]),
 textarea {
@@ -339,11 +368,23 @@ textarea {
   color: #000 !important;
 }
 
+/* Fitted well: a well shrunk tight around one piece of content (camera screen,
+   iframe). The 1px padding seats the content just inside the well's inset
+   outline ring instead of covering it. Add alongside .pl-well, typically with
+   w-fit when the content has intrinsic size:
+   <div class="pl-well pl-well-fitted w-fit">…</div> */
+.pl-well-fitted {
+  padding: 1px;
+}
+
 /* ---- Tool palette: square bevel buttons butted into one strip ------------ */
 /* Wrap buttons in <div class="pl-palette">. Each KEEPS its own Platinum raised
    bevel (so it reads as a button); they're square, equal-size, and share edges
    like a classic Mac tool palette. A <Dialog> wraps its trigger in a
-   div[data-name="__Dialog"], hence the reach-in selector + margin collapse. */
+   div[data-name="__Dialog"], hence the reach-in selector + margin collapse.
+   Plaque BUTTONS don't go inside a palette (the border-zeroing below outranks
+   .pl-plaque); for the seated-in-a-well look, add .pl-palette-plaque to the
+   strip itself. */
 .pl-palette {
   display: inline-flex;
   gap: 1px;                             /* 1px gaps show the dark bg = dividers */
@@ -367,6 +408,18 @@ textarea {
   width: 1.75rem !important;
   height: 1.75rem !important;
   padding: 0 !important;
+}
+
+/* Plaque palette: the strip seated in a tight well — the palette's dual of
+   .pl-plaque. Add alongside .pl-palette. Membership in the well group above
+   supplies the well bevel + 1px inset outline ring (its !important box-shadow
+   replaces the palette's own outer frame ring, so there's no doubled line).
+   The cells' own raised bevels are the seated platform; only the seam is
+   needed here: 1px padding lets the strip's #555 background show through as
+   a frame around the cells, coinciding with the inset ring — the same single
+   shared 1px seam the plaque construction is built on. */
+.pl-palette-plaque {
+  padding: 1px;
 }
 
 /* Lock the scroll pane while a dialog is open (the fixed backdrop alone doesn't

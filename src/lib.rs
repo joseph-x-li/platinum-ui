@@ -6,6 +6,21 @@
 
 pub mod debounce_button;
 pub mod platinum_scroll;
+
+/// Join a component's base utility classes with caller-supplied ones — plain
+/// concatenation, deliberately NOT tw_merge: its class-name parsing mis-reads
+/// design-system classes (`pl-*` → Tailwind padding-left) and silently deletes
+/// them (see ui_button.rs). Base class lists are written to compose without
+/// utility conflicts instead of relying on a merger to resolve them.
+pub(crate) fn classes(base: &str, extra: &str) -> String {
+    if extra.is_empty() {
+        base.to_string()
+    } else if base.is_empty() {
+        extra.to_string()
+    } else {
+        format!("{base} {extra}")
+    }
+}
 pub mod platinum_select;
 pub mod ui_button;
 pub mod ui_collapsible;

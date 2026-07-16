@@ -1,9 +1,11 @@
-// Copied verbatim from https://github.com/rust-ui/ui
+// Adapted from https://github.com/rust-ui/ui
 // app_crates/registry/src/ui/collapsible.rs
+// (classes joined by plain concatenation instead of tw_merge — see crate::classes)
 
 use leptos::context::Provider;
 use leptos::prelude::*;
-use tw_merge::*;
+
+use crate::classes;
 
 #[derive(Clone, Copy)]
 struct CollapsibleContext {
@@ -19,8 +21,6 @@ pub fn Collapsible(
 ) -> impl IntoView {
     let open_signal = open.unwrap_or_else(|| RwSignal::new(default_open));
     let ctx = CollapsibleContext { open: open_signal };
-
-    let class = tw_merge!("", class);
 
     view! {
         <Provider value=ctx>
@@ -62,9 +62,9 @@ pub fn CollapsibleContent(
     #[prop(optional, into)] outer_class: String,
 ) -> impl IntoView {
     let ctx = expect_context::<CollapsibleContext>();
-    let outer = tw_merge!(
+    let outer = classes(
         "grid overflow-hidden transition-all duration-300 data-[state=closed]:grid-rows-[0fr] data-[state=open]:grid-rows-[1fr]",
-        outer_class
+        &outer_class,
     );
 
     view! {
@@ -73,7 +73,7 @@ pub fn CollapsibleContent(
             data-state=move || if ctx.open.get() { "open" } else { "closed" }
             class=outer
         >
-            <div class=tw_merge!("min-h-0", class)>{children()}</div>
+            <div class=classes("min-h-0", &class)>{children()}</div>
         </div>
     }
 }
