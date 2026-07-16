@@ -167,19 +167,15 @@
    the well draws it inset, the button as a ring, the platform as this border.
    The mitered raised bevel (--pl-bc-raised, same as buttons) rides just inside
    it on ::after — real borders miter at 45° corners, which inset box-shadow
-   bands can't. Used by the .pl-bevel-platform swatch, the toolbar, and the
-   content panel. */
-.pl-bevel-platform,
-.pl-toolbar,
-.pl-panel {
+   bands can't. Applied directly (as a class) to the toolbar and the content
+   panel. */
+.pl-bevel-platform {
   position: relative;
   border: 1px solid var(--pl-outline) !important;
   box-shadow: none !important;
   background-color: var(--pl-face) !important;
 }
-.pl-bevel-platform::after,
-.pl-toolbar::after,
-.pl-panel::after {
+.pl-bevel-platform::after {
   content: "";
   position: absolute;
   inset: 0;
