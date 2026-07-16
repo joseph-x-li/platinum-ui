@@ -183,6 +183,13 @@
   border-color: var(--pl-bc-raised);
   pointer-events: none;
 }
+/* Merge this platform's top edge into the surface directly above it (e.g. the
+   content panel under the toolbar): drop the top OUTLINE so the neighbor's
+   outline is the single shared line — the raised ::after bevel stays. Same trick
+   as the dropdown arrow declining its well-facing outlines. */
+.pl-bevel-platform.pl-seam-top {
+  border-top: 0 !important;
+}
 
 /* ---- Platinum folder tabs ------------------------------------------------ */
 /* Beveled tabs sitting on the content pane's top edge: the active tab lifts to
@@ -497,20 +504,21 @@ textarea:focus-visible {
   display: flex;
   flex-direction: column;
   background: var(--pl-face-alt);
-  border-left: 1px solid #000;         /* hard black edge against the content */
 }
 /* Removed from layout when the content fits (content pane reclaims the width). */
 .pl-scrollbar-hidden { display: none; }
 
-/* Arrow buttons at each end: raised, black-bordered, with a triangle glyph.
-   Bevel is a MITERED ::after ring just inside the black border (toolbar
-   technique): per-side border-colors meet at a 45° seam in each corner. */
+/* Arrow buttons at each end: styled like the app's buttons — a 1px --pl-outline
+   (#555) border + mitered raised ::after bevel + face fill (same recipe as
+   [data-name="Button"], just with the outline as a real border so it stays
+   flush inside the scrollbar instead of an outer ring). */
 .pl-scroll-arrow {
   position: relative;
   flex: none;
   height: 16px;
   padding: 0;
-  border: 1px solid #000;
+  border: 1px solid var(--pl-outline);
+  border-left: 0;                      /* seam: content panel's right outline is the line */
   background-color: var(--pl-face);
   background-repeat: no-repeat;
   background-position: center;
@@ -531,6 +539,7 @@ textarea:focus-visible {
   border-color: var(--pl-bc-well);
 }
 .pl-scroll-up {
+  border-top: 0;                       /* seam: header's bottom outline is the line */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='7'%3E%3Cpath d='M0 7h9L4.5 0z' fill='%23000'/%3E%3C/svg%3E");
 }
 .pl-scroll-down {
@@ -540,15 +549,14 @@ textarea:focus-visible {
 /* The channel the thumb rides in. */
 .pl-scroll-track { position: relative; flex: 1 1 auto; min-height: 0; }
 
-/* Draggable purple scroll box, raised with a black border. Mitered purple bevel
-   via the ::after ring (same technique as the arrows). */
+/* Draggable purple scroll box — an outline-less purple brick (no border), with
+   just the mitered purple bevel on the ::after ring for its raised form. */
 .pl-scroll-thumb {
   position: absolute;
   left: 0;
   right: 0;
   min-height: 20px;
   background: var(--pl-purple);
-  border: 1px solid #000;
   cursor: pointer;
 }
 .pl-scroll-thumb::after {
