@@ -37,9 +37,12 @@ where
         <div class="pl-select">
             <div class="pl-select-field" style=format!("min-width:{min_width}px")>
                 <span class="pl-select-label">{current_label}</span>
+                // Seams: the three well-facing sides drop their outline so the
+                // well's own outline is the single line there; only the left
+                // edge (the divider from the label) draws one.
                 <button
                     type="button"
-                    class="pl-select-arrow"
+                    class="pl-select-arrow pl-seam-top pl-seam-right pl-seam-bottom"
                     aria-label="Open menu"
                     on:click=move |_| open.update(|o| *o = !*o)
                 ></button>

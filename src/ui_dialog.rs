@@ -95,8 +95,12 @@ pub fn DialogContent(
     #[prop(default = "Dialog")] data_name_prefix: &'static str,
 ) -> impl IntoView {
     let ctx = expect_context::<DialogContext>();
+    // Layout/positioning + the data-state visibility toggle only. The Platinum
+    // skin owns the visuals (face, outline border, bevel, hard shadow), and
+    // classic Mac dialogs snap open/closed, so there are no transition, radius,
+    // shadow, or color utilities here — they'd be dead on arrival.
     let merged_class = tw_merge!(
-        "relative bg-background border rounded-2xl shadow-lg p-6 w-full max-w-[calc(100%-2rem)] max-h-[85vh] fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] z-100 transition-all duration-200 data-[state=closed]:opacity-0 data-[state=closed]:scale-95 data-[state=open]:opacity-100 data-[state=open]:scale-100",
+        "p-6 w-full max-w-[calc(100%-2rem)] max-h-[85vh] fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] z-100 data-[state=closed]:opacity-0 data-[state=open]:opacity-100",
         class
     );
 
@@ -117,7 +121,7 @@ pub fn DialogContent(
         <div
             data-name=backdrop_data_name
             id=backdrop_id
-            class="fixed inset-0 transition-opacity duration-200 pointer-events-none z-60 bg-black/50 data-[state=closed]:opacity-0 data-[state=open]:opacity-100"
+            class="fixed inset-0 pointer-events-none z-60 bg-black/50 data-[state=closed]:opacity-0 data-[state=open]:opacity-100"
             data-state="closed"
         />
 
@@ -133,7 +137,7 @@ pub fn DialogContent(
             <button
                 type="button"
                 class=format!(
-                    "absolute top-4 right-4 p-1 rounded-sm focus:ring-2 focus:ring-offset-2 focus:outline-none text-muted-foreground hover:text-foreground{}",
+                    "absolute top-4 right-4 p-1 focus:ring-2 focus:ring-offset-2 focus:outline-none text-muted-foreground hover:text-foreground{}",
                     if show_close_button { "" } else { " hidden" },
                 )
                 data-dialog-close=target_id_clone

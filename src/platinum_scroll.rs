@@ -147,9 +147,11 @@ pub fn PlatinumScroll(children: Children) -> impl IntoView {
                     }
                 }
             >
+                // Seams: the content panel's right outline is the left line, and
+                // the header's bottom outline is the up arrow's top line.
                 <button
                     type="button"
-                    class="pl-scroll-arrow pl-scroll-up"
+                    class="pl-scroll-arrow pl-scroll-up pl-seam-left pl-seam-top"
                     aria-label="Scroll up"
                     on:click=move |_| step_by(-STEP)
                 ></button>
@@ -164,7 +166,7 @@ pub fn PlatinumScroll(children: Children) -> impl IntoView {
                 </div>
                 <button
                     type="button"
-                    class="pl-scroll-arrow pl-scroll-down"
+                    class="pl-scroll-arrow pl-scroll-down pl-seam-left"
                     aria-label="Scroll down"
                     on:click=move |_| step_by(STEP)
                 ></button>
