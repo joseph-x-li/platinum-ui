@@ -129,8 +129,12 @@ pub fn PlatinumScroll(children: Children) -> impl IntoView {
         <div class="pl-scroll">
             <div class="pl-scroll-view" node_ref=view_ref on:scroll=move |_| refresh()>
                 // Wrapper exists so the ResizeObserver has a single element whose
-                // height tracks the content (the view's own height is fixed).
-                <div node_ref=content_ref>{children()}</div>
+                // height tracks the content (the view's own height is fixed). It's
+                // at least the pane height (min-h-full, resolvable since the view
+                // is flex-stretched) and a flex column, so a page's content panel
+                // can grow to fill the pane's bottom; it still grows past it to
+                // scroll when the content is taller.
+                <div node_ref=content_ref class="flex flex-col min-h-full">{children()}</div>
             </div>
             <div
                 class="pl-scrollbar"
