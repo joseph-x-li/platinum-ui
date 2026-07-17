@@ -28,7 +28,7 @@ pub mod ui_dialog;
 
 // Flat re-exports for the common case.
 pub use debounce_button::{boxed, BoxFut, DebounceButton, DEBOUNCE_MS};
-pub use platinum_scroll::PlatinumScroll;
+pub use platinum_scroll::{PlatinumScroll, ScrollWell};
 pub use platinum_select::PlatinumSelect;
 pub use ui_button::{Button, ButtonSize, ButtonVariant};
 pub use ui_collapsible::{Collapsible, CollapsibleContent, CollapsibleTrigger};

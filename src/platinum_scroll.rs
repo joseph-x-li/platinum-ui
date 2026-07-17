@@ -18,7 +18,14 @@ use wasm_bindgen::JsCast;
 const STEP: i32 = 48;
 
 #[component]
-pub fn PlatinumScroll(children: Children) -> impl IntoView {
+pub fn PlatinumScroll(
+    children: Children,
+    /// Welled mode, used by [`ScrollWell`]: the bar column stays in layout even
+    /// when the content fits (the thumb just fills the whole track), carries
+    /// its own divider against the content, and the arrows' seams face the
+    /// surrounding well's inset ring rather than the app chrome.
+    #[prop(default = false)] welled: bool,
+) -> impl IntoView {
     let view_ref: NodeRef<html::Div> = NodeRef::new();
     let content_ref: NodeRef<html::Div> = NodeRef::new();
     let track_ref: NodeRef<html::Div> = NodeRef::new();
@@ -30,12 +37,15 @@ pub fn PlatinumScroll(children: Children) -> impl IntoView {
     let scroll_height = RwSignal::new(1.0);
     let client_height = RwSignal::new(1.0);
 
-    // Pull the current geometry off the DOM into the signals.
+    // Pull the current geometry off the DOM into the signals. try_set: the
+    // ResizeObserver callback below can outlive this instance by one firing
+    // (removing the observed element from the DOM is itself a resize), and a
+    // set() into disposed signals would panic and poison the wasm runtime.
     let refresh = move || {
         if let Some(el) = view_ref.get_untracked() {
-            scroll_top.set(el.scroll_top() as f64);
-            scroll_height.set(el.scroll_height().max(1) as f64);
-            client_height.set(el.client_height().max(1) as f64);
+            scroll_top.try_set(el.scroll_top() as f64);
+            scroll_height.try_set(el.scroll_height().max(1) as f64);
+            client_height.try_set(el.client_height().max(1) as f64);
         }
     };
 
@@ -86,11 +96,23 @@ pub fn PlatinumScroll(children: Children) -> impl IntoView {
             dragging.set(false);
         }
     });
+    // Observer + its closure live here so unmount can tear them down — this
+    // component used to be app-lifetime (the old whole-pane scroller) and got
+    // away with leaking them; ScrollWell instances mount and unmount with
+    // their page, so a leaked observer would fire into disposed signals.
+    let observer: StoredValue<Option<(web_sys::ResizeObserver, Closure<dyn FnMut()>)>, LocalStorage> =
+        StoredValue::new_local(None);
+
     let rz = window_event_listener(ev::resize, move |_| refresh());
     on_cleanup(move || {
         mv.remove();
         up.remove();
         rz.remove();
+        observer.update_value(|o| {
+            if let Some((obs, _cb)) = o.take() {
+                obs.disconnect();
+            }
+        });
     });
 
     // Re-measure whenever the content's size changes — a route swap, async data
@@ -110,9 +132,9 @@ pub fn PlatinumScroll(children: Children) -> impl IntoView {
         let cb = Closure::<dyn FnMut()>::new(move || refresh());
         if let Ok(obs) = web_sys::ResizeObserver::new(cb.as_ref().unchecked_ref()) {
             obs.observe(&content);
-            std::mem::forget(obs); // app-lifetime scroller: keep the observer alive
+            // Parked (with its closure) for the on_cleanup above to disconnect.
+            observer.set_value(Some((obs, cb)));
         }
-        cb.forget();
     });
 
     // Thumb size/position as a % of the track (content-proportional).
@@ -123,7 +145,22 @@ pub fn PlatinumScroll(children: Children) -> impl IntoView {
     // page would carry a full-height, do-nothing scrollbar (native `auto` hides
     // it). Wheel/keys still scroll the view natively, and that scroll event
     // re-measures, so the bar appears the moment content grows past the pane.
+    // (Welled mode instead keeps the bar always; a fitting page just shows a
+    // full-track thumb, since thumb height is client/scroll = 100% there.)
     let scrollable = move || scroll_height.get() > client_height.get() + 1.0;
+
+    // Which outline edges the arrows decline to draw depends on who the
+    // neighbors are: in the app chrome the content panel provides the left
+    // line and the header the up arrow's top line; inside a well the inset
+    // ring provides top/right/bottom and the bar's own divider the left.
+    let (up_seams, down_seams) = if welled {
+        (
+            "pl-seam-left pl-seam-top pl-seam-right",
+            "pl-seam-left pl-seam-bottom pl-seam-right",
+        )
+    } else {
+        ("pl-seam-left pl-seam-top", "pl-seam-left")
+    };
 
     view! {
         <div class="pl-scroll">
@@ -137,8 +174,8 @@ pub fn PlatinumScroll(children: Children) -> impl IntoView {
                 <div node_ref=content_ref class="flex flex-col min-h-full">{children()}</div>
             </div>
             <div
-                class="pl-scrollbar"
-                class:pl-scrollbar-hidden=move || !scrollable()
+                class=if welled { "pl-scrollbar pl-scrollbar-welled" } else { "pl-scrollbar" }
+                class:pl-scrollbar-hidden=move || !welled && !scrollable()
                 // Native scrollbars scroll the content when you wheel over them;
                 // this bar is a separate element, so forward its wheel to the view.
                 on:wheel=move |e: ev::WheelEvent| {
@@ -147,11 +184,9 @@ pub fn PlatinumScroll(children: Children) -> impl IntoView {
                     }
                 }
             >
-                // Seams: the content panel's right outline is the left line, and
-                // the header's bottom outline is the up arrow's top line.
                 <button
                     type="button"
-                    class="pl-scroll-arrow pl-scroll-up pl-seam-left pl-seam-top"
+                    class=format!("pl-scroll-arrow pl-scroll-up {up_seams}")
                     aria-label="Scroll up"
                     on:click=move |_| step_by(-STEP)
                 ></button>
@@ -166,11 +201,33 @@ pub fn PlatinumScroll(children: Children) -> impl IntoView {
                 </div>
                 <button
                     type="button"
-                    class="pl-scroll-arrow pl-scroll-down pl-seam-left"
+                    class=format!("pl-scroll-arrow pl-scroll-down {down_seams}")
                     aria-label="Scroll down"
                     on:click=move |_| step_by(STEP)
                 ></button>
             </div>
+        </div>
+    }
+}
+
+/// A self-contained scrollable section: a well whose right-hand side is a
+/// permanently visible Platinum scrollbar and whose left-hand side is the
+/// scrolling content. Unlike the app-chrome [`PlatinumScroll`], the bar keeps
+/// its place even when the content fits — the thumb simply fills the whole
+/// track with nowhere to go. The well's 1px fitted padding seats both sides
+/// just inside its inset outline ring.
+///
+/// The caller owns the size: `<ScrollWell class="h-40 w-72">…</ScrollWell>`.
+/// Give the content its own padding.
+#[component]
+pub fn ScrollWell(
+    children: Children,
+    /// Sizing/extra classes for the well box (height is the caller's job).
+    #[prop(into, optional)] class: String,
+) -> impl IntoView {
+    view! {
+        <div class=crate::classes("pl-well pl-well-fitted", &class)>
+            <PlatinumScroll welled=true>{children()}</PlatinumScroll>
         </div>
     }
 }

@@ -611,6 +611,16 @@ textarea:focus-visible {
 /* Removed from layout when the content fits (content pane reclaims the width). */
 .pl-scrollbar-hidden { display: none; }
 
+/* ScrollWell's bar column: never leaves layout (the thumb hides instead), and
+   1px wider to carry its own divider against the content — inside a well
+   there's no neighboring panel outline to borrow the line from. The well's
+   inset ring supplies the top/right/bottom lines; the arrows drop those
+   outline edges with seams so nothing doubles. */
+.pl-scrollbar-welled {
+  width: 17px;
+  border-left: 1px solid var(--pl-outline);
+}
+
 /* Arrow buttons at each end: members of the shared raised-surface construction
    (outline border + mitered ::after bevel, from the block near the top). The
    markup adds .pl-seam-left (the content panel's right outline is the line) and

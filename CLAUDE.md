@@ -80,7 +80,11 @@ ring stay full-strength (so no `disabled:opacity-*` utilities on the whole box).
 - `platinum_scroll.rs` / `platinum_select.rs`: hand-drawn scrollbar and popup
   menu (CSS scrollbar buttons don't render on macOS Chrome; native `<select>`
   was dropped entirely). Their arrow buttons are members of the raised group,
-  seated with `.pl-seam-*` + 1px margins.
+  seated with `.pl-seam-*` + 1px margins. `ScrollWell` (same file) is a
+  fitted well with `PlatinumScroll` in welled mode: bar always in layout
+  (a fitting page shows a full-track thumb), `.pl-scrollbar-welled` carries
+  the divider, arrow seams face the well ring. Caller sets the size via
+  `class`.
 
 ## Verifying changes
 
