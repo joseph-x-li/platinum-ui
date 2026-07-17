@@ -304,30 +304,39 @@
 
 /* ---- Platinum folder tabs ------------------------------------------------ */
 /* Beveled tabs sitting on the content pane's top edge: the active tab lifts to
-   the front and connects to the pane; inactive tabs sit lower and recede. */
+   the front and connects to the pane; inactive tabs sit lower and recede.
+   The strip scrolls horizontally (bar hidden) when tabs outgrow it — narrow
+   windows would otherwise strand the clipped tabs, since the app's content
+   pane no longer scrolls. */
 .pl-tabs {
   display: flex;
   align-items: flex-end;
   gap: 3px;
+  overflow-x: auto;
+  scrollbar-width: none;               /* Firefox: hide the bar */
 }
+.pl-tabs::-webkit-scrollbar { display: none; }   /* Chrome: hide the bar */
+/* Inactive tabs recede by being 2px SHORTER (bottom padding) while everything
+   bottom-aligns — not by a top:2px offset: relative offsets overflow the
+   strip's box, and in a scroll container that grows a stub scrollbar. */
 .pl-tab {
-  padding: 4px 14px;
+  padding: 4px 14px 2px;
   font-size: 0.8125rem;
   line-height: 1.2;
   color: #000;
   cursor: pointer;
-  position: relative;
-  top: 2px;                      /* inactive tabs sit lower / behind */
+  position: relative;            /* anchors the active tab's z-index */
   border: 1px solid var(--pl-outline);
   border-bottom: none;
   background-color: var(--pl-face-alt);
   box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.45);
+  white-space: nowrap;
 }
 .pl-tab:hover {
   background-color: var(--pl-face);
 }
 .pl-tab-active {
-  top: 0;                        /* active tab lifts to the front */
+  padding-bottom: 4px;           /* full height: lifts to the front */
   z-index: 1;
   font-weight: 600;
   background-color: var(--pl-face);
@@ -422,10 +431,11 @@ textarea {
   padding: 1px;
 }
 
-/* Lock the scroll pane while a dialog is open (the fixed backdrop alone doesn't
-   stop wheel-scrolling the pane behind it). The custom scroller is the inner
-   .pl-scroll-view now. */
-body:has([data-name="DialogContent"][data-state="open"]) .pl-scroll-view {
+/* Lock every scroll pane while a dialog — or a popup menu — is open (the
+   fixed backdrop alone doesn't stop wheel-scrolling the pane behind it, and
+   the fixed-position menu would drift away from its field). */
+body:has([data-name="DialogContent"][data-state="open"]) .pl-scroll-view,
+body:has(.pl-select-menu) .pl-scroll-view {
   overflow: hidden !important;
 }
 
@@ -711,13 +721,13 @@ textarea:focus-visible {
 /* Full-viewport click catcher so an outside click dismisses the menu. */
 .pl-select-backdrop { position: fixed; inset: 0; z-index: 40; }
 
-/* The white menu overlays the trigger, Mac-style. */
+/* The white menu overlays the trigger, Mac-style. FIXED, not absolute: an
+   absolute menu is clipped by any overflow ancestor (a ScrollWell, or the
+   app's overflow-hidden content pane), stranding the bottom options. The
+   component measures the field on open and sets top/left/min-width inline. */
 .pl-select-menu {
-  position: absolute;
-  top: -1px;
-  left: -1px;
+  position: fixed;
   z-index: 50;
-  min-width: calc(100% + 2px);
   margin: 0;
   padding: 2px;
   list-style: none;
