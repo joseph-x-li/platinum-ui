@@ -305,9 +305,9 @@
 /* ---- Platinum folder tabs ------------------------------------------------ */
 /* Beveled tabs sitting on the content pane's top edge: the active tab lifts to
    the front and connects to the pane; inactive tabs sit lower and recede.
-   The strip scrolls horizontally (bar hidden) when tabs outgrow it — narrow
-   windows would otherwise strand the clipped tabs, since the app's content
-   pane no longer scrolls. */
+   The strip scrolls horizontally (bar hidden) when tabs outgrow it — without
+   this, narrow windows strand the clipped tabs whenever no ancestor scrolls
+   on the strip's behalf (e.g. a fixed, non-scrolling content pane). */
 .pl-tabs {
   display: flex;
   align-items: flex-end;

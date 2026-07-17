@@ -3,11 +3,10 @@ name = "platinum-ui"
 version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
+description = "Mac OS Platinum-styled Leptos component library: buttons, dialog, collapsible, popup select, debounced button, scrollbar/scroll well. Ships with platinum.css; the consumer provides Tailwind and adds this crate's src to its @source scan."
+# TODO before publishing: pick a license (`license = "..."`) — note the bundled
+# fonts/ are Apache-2.0 (Arimo/Cousine) and their LICENSE files must ship.
 
-# Reusable Leptos component library — a Mac OS Platinum-styled control set
-# (buttons, dialog, collapsible, popup select, debounced button, custom
-# scrollbar). Extracted from the chdkpano client so it can be shared and,
-# eventually, published. The styling ships alongside as `platinum.css`.
 [dependencies]
 leptos = { version = "0.8", features = ["csr", "nightly"] }
 gloo-timers = { version = "0.3", features = ["futures"] }
