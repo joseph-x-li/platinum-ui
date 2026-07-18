@@ -1,11 +1,17 @@
 [package]
 name = "platinum-ui"
 version = "0.1.0"
-edition.workspace = true
-rust-version.workspace = true
+edition = "2021"
+rust-version = "1.78"
 description = "Mac OS Platinum-styled Leptos component library: buttons, dialog, collapsible, popup select, debounced button, scrollbar/scroll well. Ships with platinum.css; the consumer provides Tailwind and adds this crate's src to its @source scan."
+repository = "https://github.com/joseph-x-li/platinum-ui"
+readme = "README.md"
 # TODO before publishing: pick a license (`license = "..."`) — note the bundled
 # fonts/ are Apache-2.0 (Arimo/Cousine) and their LICENSE files must ship.
+
+# Standalone workspace root — also keeps cargo from attaching this crate to a
+# parent workspace when it's checked out as a submodule inside another repo.
+[workspace]
 
 [dependencies]
 leptos = { version = "0.8", features = ["csr", "nightly"] }
