@@ -1,0 +1,4 @@
+Arimo is licensed under the Apache License, Version 2.0.
+Copyright 2013 Steve Matteson (Monotype Imaging Inc.)
+Obtained via Fontsource (https://fontsource.org/fonts/arimo).
+License: https://www.apache.org/licenses/LICENSE-2.0
