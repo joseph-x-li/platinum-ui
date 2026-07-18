@@ -82,5 +82,5 @@ container to resize every bevel inside it.
 
 ## License
 
-Not yet chosen (TODO). The bundled Arimo/Cousine fonts are Apache-2.0 —
+MIT (see `LICENSE`). The bundled Arimo/Cousine fonts are Apache-2.0 —
 see `fonts/LICENSE-arimo.txt` and `fonts/LICENSE-cousine.txt`.
