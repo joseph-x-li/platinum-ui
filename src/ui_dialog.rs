@@ -153,9 +153,12 @@ pub fn DialogContent(
         >
             <button
                 type="button"
-                class=format!(
-                    "absolute top-4 right-4 p-1 focus:ring-2 focus:ring-offset-2 focus:outline-none text-muted-foreground hover:text-foreground{}",
-                    if show_close_button { "" } else { " hidden" },
+                // classes() rather than a format! suffix: a "{}" glued to the
+                // last class hides it from the build.rs utility scan (the
+                // scanner sees the token "hover:text-foreground{}").
+                class=classes(
+                    "absolute top-4 right-4 p-1 focus:ring-2 focus:ring-offset-2 focus:outline-none text-muted-foreground hover:text-foreground",
+                    if show_close_button { "" } else { "hidden" },
                 )
                 data-dialog-close=target_id_clone
                 aria-label="Close dialog"

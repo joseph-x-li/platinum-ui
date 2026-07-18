@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Nightly: the leptos "nightly" feature requires it.
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build for wasm (the target consumers compile for)
+        run: cargo build --target wasm32-unknown-unknown
+
+      - name: Utility-coverage tests
+        # Host build; asserts every utility class the components emit came out
+        # of the encre-css pipeline into PLATINUM_CSS (encre skips unparseable
+        # classes silently), plus skin-inclusion sanity checks.
+        run: cargo test

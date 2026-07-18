@@ -12,9 +12,12 @@ components in `src/` + the skin in `platinum.css`. Two consumption modes:
    `<PlatinumStyles/>` injects it. CONSTRAINT: every utility class a component
    emits must be encre-css-parseable — nested-bracket arbitrary variants like
    `[&_x:not([a='b'])]:…` are not; write those as plain rules in platinum.css
-   (see the Button icon-size rule). When adding new utility classes to a
-   component, verify they appear in the generated
-   `target/**/out/platinum-utilities.css`.
+   (see the Button icon-size rule). When adding a utility class to a
+   component, add it to `tests/utility_coverage.rs` — `cargo test` (also run
+   by CI) asserts every listed class produced a rule in PLATINUM_CSS. Also:
+   never glue a `format!` placeholder directly onto a class string
+   (`"…foo{}"`) — the scanner sees `foo{}` and generates nothing; join with
+   `crate::classes()` instead.
 
 ## The bevel system — read this before touching platinum.css
 
