@@ -18,26 +18,57 @@ Bundled fonts: [Arimo and Cousine](https://fonts.google.com/specimen/Arimo)
 Geneva/Monaco — Macs get the real Apple faces first in the font stacks, every
 other OS gets the bundled ones.
 
-## Installing
+## Installing — no Tailwind needed
 
-Because Tailwind must *scan this crate's sources* to generate the utility
-classes the components emit — and because the CSS and fonts are plain files —
-consumers need the crate **checked out at a stable path**, not just compiled.
-The intended flow is a git submodule (a sibling clone also works):
+The crate compiles its own utility CSS at build time (via
+[encre-css](https://crates.io/crates/encre-css), a pure-Rust Tailwind v4
+generator, in `build.rs`) — so the default setup is just a dependency and one
+component:
+
+```toml
+[dependencies]
+platinum-ui = { git = "https://github.com/joseph-x-li/platinum-ui" }
+```
+
+```rust
+use platinum_ui::{PlatinumStyles, Button, ButtonVariant};
+
+view! {
+    <PlatinumStyles/>   // injects the whole design system as a <style>
+    <Button variant=ButtonVariant::Plaque>"Hello"</Button>
+}
+```
+
+Optionally serve the woff2 files from `fonts/` at your web root so every OS
+renders the bundled faces (without them you get each platform's sans/mono
+fallbacks; Macs get Geneva/Monaco either way). With [Trunk](https://trunkrs.dev):
+
+```html
+<link data-trunk rel="copy-file" href="platinum-ui/fonts/arimo-latin-400-normal.woff2"/>
+<link data-trunk rel="copy-file" href="platinum-ui/fonts/arimo-latin-700-normal.woff2"/>
+<link data-trunk rel="copy-file" href="platinum-ui/fonts/arimo-latin-400-italic.woff2"/>
+<link data-trunk rel="copy-file" href="platinum-ui/fonts/cousine-latin-400-normal.woff2"/>
+<link data-trunk rel="copy-file" href="platinum-ui/fonts/cousine-latin-700-normal.woff2"/>
+```
+
+(The `platinum-ui/…` paths above assume a checkout — see below. With a plain
+git dependency, copy the five woff2 files out of this repo instead.)
+
+## Alternative: your app already runs Tailwind v4
+
+If your build compiles Tailwind anyway, skip `<PlatinumStyles/>` and let your
+Tailwind own one deduplicated stylesheet and one theme for app + library
+alike. Check the crate out at a stable path (git submodule or sibling clone —
+Tailwind must scan its sources, and the CSS/fonts are plain files):
 
 ```sh
 git submodule add https://github.com/joseph-x-li/platinum-ui
 ```
 
-**1. Cargo** — path dependency:
-
 ```toml
 [dependencies]
 platinum-ui = { path = "./platinum-ui" }
 ```
-
-**2. Stylesheet** (Tailwind v4) — import the skin after Tailwind and add the
-crate to the source scan:
 
 ```css
 @import "tailwindcss";
@@ -47,17 +78,8 @@ crate to the source scan:
 @source "./platinum-ui/src";
 ```
 
-**3. Fonts** — serve the woff2 files from `fonts/` at your web root (their
-`@font-face` rules in platinum.css reference `/arimo-…woff2` etc.). With
-[Trunk](https://trunkrs.dev):
-
-```html
-<link data-trunk rel="copy-file" href="platinum-ui/fonts/arimo-latin-400-normal.woff2"/>
-<link data-trunk rel="copy-file" href="platinum-ui/fonts/arimo-latin-700-normal.woff2"/>
-<link data-trunk rel="copy-file" href="platinum-ui/fonts/arimo-latin-400-italic.woff2"/>
-<link data-trunk rel="copy-file" href="platinum-ui/fonts/cousine-latin-400-normal.woff2"/>
-<link data-trunk rel="copy-file" href="platinum-ui/fonts/cousine-latin-700-normal.woff2"/>
-```
+This is how [chdkpano](https://github.com/joseph-x-li/chdkpano), the app this
+library grew out of, consumes it.
 
 ## Components
 
@@ -68,7 +90,7 @@ crate to the source scan:
 | `Dialog` family | Modal window with the classic hard-edged drop shadow: `Dialog`, `DialogTrigger`, `DialogContent`, `DialogHeader`/`Title`/`Description`/`Body`/`Footer`, `DialogClose`. |
 | `PlatinumSelect` | Hand-drawn popup menu replacing `<select>`: recessed value well + raised arrow, white overlay menu with ✓ — `position: fixed`, so it never clips inside scroll containers. |
 | `PlatinumScroll` | Custom scrollbar with real arrow buttons and a draggable purple thumb (CSS scrollbar buttons don't render on macOS Chrome). |
-| `ScrollWell` | A well whose right side is a permanently visible scrollbar and whose left side scrolls — the bar keeps its place even when content fits. Size it from the call site: `<ScrollWell class="h-64">…</ScrollWell>`. |
+| `ScrollWell` | A well whose right side is a permanently visible scrollbar and whose left side scrolls — the bar keeps its place even when content fits. Size it from the call site via `class` (a Tailwind utility like `h-64`, or any CSS class of your own). |
 | `Collapsible` family | Disclosure widget: `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent`. |
 
 CSS-only primitives (put the class on any element): `pl-platform` (raised

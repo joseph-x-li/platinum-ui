@@ -1,10 +1,20 @@
 # platinum-ui
 
 Mac OS 8/9 "Platinum" design system for Leptos 0.8 (CSR, nightly): Rust
-components in `src/` + the skin in `platinum.css`. Consumed by the chdkpano
-client, which imports the CSS after Tailwind and adds this crate's `src` to its
-Tailwind `@source` scan (the components emit utility classes; the scan is what
-gets them generated).
+components in `src/` + the skin in `platinum.css`. Two consumption modes:
+
+1. **Tailwind mode** (chdkpano): the app imports the CSS after Tailwind and
+   adds this crate's `src` to its `@source` scan (the components emit utility
+   classes; the scan is what gets them generated).
+2. **Standalone mode**: `build.rs` generates the utility CSS at compile time
+   with encre-css (pure-Rust Tailwind v4 generator, preflight off, custom
+   colors registered there); `PLATINUM_CSS` = platinum.css + that output, and
+   `<PlatinumStyles/>` injects it. CONSTRAINT: every utility class a component
+   emits must be encre-css-parseable — nested-bracket arbitrary variants like
+   `[&_x:not([a='b'])]:…` are not; write those as plain rules in platinum.css
+   (see the Button icon-size rule). When adding new utility classes to a
+   component, verify they appear in the generated
+   `target/**/out/platinum-utilities.css`.
 
 ## The bevel system — read this before touching platinum.css
 

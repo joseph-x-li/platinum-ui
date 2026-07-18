@@ -211,6 +211,14 @@
   transition: none !important;
 }
 [data-name="Button"] { color: #000 !important; }
+/* Default icon size inside buttons: svgs without an explicit size-* utility
+   get 1rem. (Was the [&_svg:not([class*='size-'])]:size-4 utility on the
+   Button base — the one class string encre-css can't parse, so it lives here
+   as plain CSS instead.) */
+[data-name="Button"] svg:not([class*="size-"]) {
+  width: 1rem;
+  height: 1rem;
+}
 /* The bevel rides on ::after, independent of the outline border, so a seam can
    drop an outline edge without losing the bevel edge. The scroll thumb inherits
    these rules unchanged by re-pointing --pl-bc-raised/--pl-bc-well at its

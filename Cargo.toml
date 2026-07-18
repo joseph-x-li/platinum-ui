@@ -14,6 +14,11 @@ license = "MIT"
 # parent workspace when it's checked out as a submodule inside another repo.
 [workspace]
 
+[build-dependencies]
+# Pure-Rust Tailwind v4-compatible generator: build.rs compiles the utility
+# classes the components emit, so consumers need no Node/Tailwind toolchain.
+encre-css = "0.20"
+
 [dependencies]
 leptos = { version = "0.8", features = ["csr", "nightly"] }
 gloo-timers = { version = "0.3", features = ["futures"] }

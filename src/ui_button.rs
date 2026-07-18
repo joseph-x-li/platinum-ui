@@ -12,7 +12,11 @@ use leptos::prelude::*;
 // (No disabled:opacity-* here: fading the whole box would dim the outline and
 // well bevel too. The skin's :disabled rules fade only the label + platform
 // bevel — see platinum.css.)
-const BASE: &str = "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none w-fit hover:cursor-pointer touch-manipulation [-webkit-tap-highlight-color:transparent] select-none [-webkit-touch-callout:none]";
+// (Default icon sizing — svgs without a size-* class get 1rem — lives in
+// platinum.css as a [data-name="Button"] rule: its old utility form,
+// [&_svg:not([class*='size-'])]:size-4, is the one class encre-css can't
+// parse, and every utility here must stay encre-parseable — see build.rs.)
+const BASE: &str = "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium disabled:pointer-events-none [&_svg]:pointer-events-none shrink-0 [&_svg]:shrink-0 outline-none w-fit hover:cursor-pointer touch-manipulation [-webkit-tap-highlight-color:transparent] select-none [-webkit-touch-callout:none]";
 
 /// The two constructions a button can wear. Default is the raised platform;
 /// Plaque emits pl-plaque, swapping in the platform-seated-in-a-well composite
