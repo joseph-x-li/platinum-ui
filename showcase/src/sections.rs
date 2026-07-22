@@ -6,7 +6,7 @@ use leptos::ev;
 use leptos::prelude::*;
 
 use platinum_ui::debounce_button::{boxed, DebounceButton};
-use platinum_ui::platinum_scroll::ScrollWell;
+use platinum_ui::platinum_scroll::{PlatinumTextarea, ScrollWell};
 use platinum_ui::platinum_select::PlatinumSelect;
 use platinum_ui::ui_button;
 use platinum_ui::ui_button::{Button, ButtonVariant};
@@ -28,14 +28,14 @@ fn input_value(ev: &ev::Event) -> String {
 #[component]
 pub fn ColorsSection() -> impl IntoView {
     view! {
-        <ComponentSection title="Colors">
+        <ComponentSection title="Light palette">
             <div class="flex flex-col gap-5">
                 // Neutral surfaces + lines.
                 <div class="flex flex-wrap gap-5">
                     <ColorSwatch label="Window" hex="#ffffff"/>
                     <ColorSwatch label="Face alt" hex="#cccccc"/>
                     <ColorSwatch label="Outline" hex="#555555"/>
-                    <ColorSwatch label="Black" hex="#000000"/>
+                    <ColorSwatch label="Ink" hex="#000000"/>
                 </div>
                 // Neutral bevel family: face + its highlight/shadow edges + pressed.
                 <div class="flex flex-wrap gap-5">
@@ -44,13 +44,35 @@ pub fn ColorsSection() -> impl IntoView {
                     <ColorSwatch label="Shadow" hex="#808080"/>
                     <ColorSwatch label="Pressed" hex="#c6c6c2"/>
                 </div>
-                // Accent bevel family (mirrors the neutral one above).
+            </div>
+        </ComponentSection>
+
+        <ComponentSection title="Dark palette (.dark)">
+            <div class="flex flex-col gap-5">
+                // The same roles relit for a dark room; ink inverts.
                 <div class="flex flex-wrap gap-5">
-                    <ColorSwatch label="Purple" hex="#8e5ba6"/>
-                    <ColorSwatch label="Highlight" hex="#c1a5cf"/>
-                    <ColorSwatch label="Shadow" hex="#553764"/>
-                    <ColorSwatch label="Pressed" hex="#7a4f8f"/>
+                    <ColorSwatch label="Window" hex="#1e1e1e"/>
+                    <ColorSwatch label="Face alt" hex="#333333"/>
+                    <ColorSwatch label="Outline" hex="#000000"/>
+                    <ColorSwatch label="Ink" hex="#e8e8e8"/>
                 </div>
+                <div class="flex flex-wrap gap-5">
+                    <ColorSwatch label="Face" hex="#3e3e3e"/>
+                    <ColorSwatch label="Highlight" hex="#6f6f6f"/>
+                    <ColorSwatch label="Shadow" hex="#141414"/>
+                    <ColorSwatch label="Pressed" hex="#2f2f2f"/>
+                </div>
+            </div>
+        </ComponentSection>
+
+        <ComponentSection title="Accent purple (shared by both palettes)">
+            // The scroll-thumb family is deliberately identical in light and
+            // dark — the one constant across the two palettes.
+            <div class="flex flex-wrap gap-5">
+                <ColorSwatch label="Purple" hex="#8e5ba6"/>
+                <ColorSwatch label="Highlight" hex="#c1a5cf"/>
+                <ColorSwatch label="Shadow" hex="#553764"/>
+                <ColorSwatch label="Pressed" hex="#7a4f8f"/>
             </div>
         </ComponentSection>
     }
@@ -210,8 +232,6 @@ pub fn ButtonsSection() -> impl IntoView {
 #[component]
 pub fn InputsSection() -> impl IntoView {
     let (checked, set_checked) = signal(true);
-    let well_a = RwSignal::new(false);
-    let well_b = RwSignal::new(true);
     let (radio, set_radio) = signal(2);
     let (text, set_text) = signal(String::new());
     // Backing value for the popup-menu demo (tv96 shutter units).
@@ -239,12 +259,26 @@ pub fn InputsSection() -> impl IntoView {
                     prop:value=move || text.get()
                     on:input=move |ev| set_text.set(input_value(&ev))
                 />
+                // Plain textarea: scrolls natively, so its bar is the global
+                // ::-webkit-scrollbar fallback (no arrows on macOS).
                 <textarea
                     class="text-sm px-3 py-2"
                     rows="3"
-                    placeholder="textarea"
+                    placeholder="plain textarea (webkit-fallback bar)"
                 ></textarea>
             </div>
+        </ComponentSection>
+
+        <ComponentSection title="Platinum textarea">
+            <p class="text-xs text-muted-foreground mb-3 max-w-md">
+                "The DOM-built bar on a text field: arrows (hold to autorepeat), "
+                "draggable accent thumb, native typing and scrolling."
+            </p>
+            <PlatinumTextarea
+                class="h-40 max-w-sm"
+                placeholder="platinum textarea"
+                value="Line 1\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\nLine 7\nLine 8\nLine 9\nLine 10\nLine 11\nLine 12"
+            />
         </ComponentSection>
 
         <ComponentSection title="Checkbox">
@@ -253,20 +287,6 @@ pub fn InputsSection() -> impl IntoView {
                     on:change=move |_| set_checked.update(|v| *v = !*v)/>
                 "Checkbox"
             </label>
-        </ComponentSection>
-
-        <ComponentSection title="Well checkbox (concept)">
-            <p class="text-xs text-muted-foreground mb-3 max-w-md">
-                "Alternative construction: the box is a real "
-                <code class="font-mono">".pl-well"</code>
-                " socket, and the checked mark is a raised plug seated in it — "
-                "the skin's raised/recessed duality as a control. Concept only; "
-                "the standard checkbox above stays the library default."
-            </p>
-            <div class="flex flex-col items-start gap-2 text-sm">
-                <WellCheckbox label="Well checkbox" checked=well_a/>
-                <WellCheckbox label="Starts checked" checked=well_b/>
-            </div>
         </ComponentSection>
 
         <ComponentSection title="Radio">
@@ -483,48 +503,3 @@ pub fn ColorSwatch(label: &'static str, hex: &'static str) -> impl IntoView {
     }
 }
 
-/// Concept control: a checkbox built from the WELL construction. The box is a
-/// genuine `.pl-well` socket (mitered well bevel + inset outline ring — not
-/// the thin box-shadow well the standard checkbox uses), and the checked mark
-/// is a raised purple plug seated in it — the scroll thumb's accent family,
-/// with the 1px box-shadow bevel that too-small-for-`::after` parts use.
-/// While the pointer is down the plug shows depressed (pressed face, inverted
-/// bevel), so the click reads as pushing the plug in or out of its socket.
-#[component]
-pub fn WellCheckbox(label: &'static str, checked: RwSignal<bool>) -> impl IntoView {
-    let (pressing, set_pressing) = signal(false);
-    view! {
-        <button
-            type="button"
-            role="checkbox"
-            aria-checked=move || if checked.get() { "true" } else { "false" }
-            class="inline-flex items-center gap-2 cursor-pointer select-none"
-            on:click=move |_| checked.update(|v| *v = !*v)
-            on:mousedown=move |_| set_pressing.set(true)
-            on:mouseup=move |_| set_pressing.set(false)
-            on:mouseleave=move |_| set_pressing.set(false)
-        >
-            <span class="pl-well pl-well-fitted block" style="width:18px;height:18px">
-                <span
-                    class="block w-full h-full"
-                    style=move || {
-                        if pressing.get() {
-                            // Mid-press: depressed plug (pressed purple face,
-                            // well-inverted bevel), same as the thumb :active.
-                            "background:var(--pl-purple-press);\
-                             box-shadow:inset 1px 1px 0 var(--pl-purple-lo),\
-                                        inset -1px -1px 0 var(--pl-purple-hi)"
-                        } else if checked.get() {
-                            "background:var(--pl-purple);\
-                             box-shadow:inset 1px 1px 0 var(--pl-purple-hi),\
-                                        inset -1px -1px 0 var(--pl-purple-lo)"
-                        } else {
-                            ""
-                        }
-                    }
-                ></span>
-            </span>
-            {label}
-        </button>
-    }
-}

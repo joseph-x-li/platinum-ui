@@ -10,6 +10,7 @@ mod sections;
 use leptos::prelude::*;
 use platinum_ui::platinum_select::PlatinumSelect;
 use platinum_ui::platinum_sidebar::Sidebar;
+use platinum_ui::ui_button::{Button, ButtonVariant};
 use platinum_ui::{PlatinumStyles, ScrollWell};
 
 use sections::{
@@ -36,6 +37,22 @@ fn App() -> impl IntoView {
     let selected = RwSignal::new(0usize);
     // Live bevel width (px) — drives --pl-bw for every demo at once.
     let bevel = RwSignal::new(2u32);
+    // Dark palette toggle: mirrors the signal onto <html class="dark">, the
+    // library's opt-in hook for its dark token set.
+    let dark = RwSignal::new(false);
+    Effect::new(move |_| {
+        let on = dark.get();
+        if let Some(root) = web_sys::window()
+            .and_then(|w| w.document())
+            .and_then(|d| d.document_element())
+        {
+            let _ = if on {
+                root.class_list().add_1("dark")
+            } else {
+                root.class_list().remove_1("dark")
+            };
+        }
+    });
 
     view! {
         <PlatinumStyles/>
@@ -49,6 +66,13 @@ fn App() -> impl IntoView {
                     "Components inspired by the Platinum interface introduced in Mac OS 8"
                 </span>
                 <div class="ml-auto flex items-center gap-2">
+                    // Pressed while dark — the raised group's aria-current hook.
+                    <Button
+                        variant=ButtonVariant::Default
+                        size=platinum_ui::ui_button::ButtonSize::Sm
+                        attr:aria-current=move || dark.get().then_some("page")
+                        on:click=move |_| dark.update(|v| *v = !*v)
+                    >"Dark"</Button>
                     <span class="text-xs text-muted-foreground uppercase tracking-wide">"Bevel size"</span>
                     <PlatinumSelect
                         min_width=96

@@ -116,8 +116,13 @@ pub fn DialogContent(
     // w-[calc(100%-2rem)] (not w-full + max-w-calc): callers pass their own
     // max-w-*, and width-plus-max-width composes as min() with no property
     // conflict — plain class concatenation needs no merger to arbitrate.
+    // Centering: top/left pin the box's corner to the viewport midpoint; the
+    // pull-back by half its own size is a plain [data-target] rule in
+    // platinum.css. (translate-* utilities do work now that PLATINUM_CSS
+    // ships the preflight their --en-* defaults live in, but the plain rule
+    // predates that and one declaration beats two composed utilities.)
     let merged_class = classes(
-        "p-6 w-[calc(100%-2rem)] max-h-[85vh] fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] z-100 data-[state=closed]:opacity-0 data-[state=open]:opacity-100",
+        "p-6 w-[calc(100%-2rem)] max-h-[85vh] fixed top-[50%] left-[50%] z-100 data-[state=closed]:opacity-0 data-[state=open]:opacity-100",
         &class,
     );
 

@@ -21,7 +21,8 @@ fn main() {
         .collect();
 
     let mut config = encre_css::Config::default();
-    // platinum.css (via PlatinumStyles) is the base layer; no preflight.
+    // PlatinumStyles already ships the design system's preflight; only the
+    // showcase-specific utilities are generated here.
     config.preflight = encre_css::Preflight::None;
     // The full token set platinum.css defines — pointed at the :root vars.
     for name in [

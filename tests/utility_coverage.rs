@@ -45,13 +45,19 @@ const EMITTED_UTILITIES: &[&str] = &[
     "has-[>svg]:px-4",
     // ui_dialog.rs — content, backdrop, close button, wrappers
     "p-6",
+    // platinum_scroll.rs — PlatinumTextarea inner padding/typography
+    "p-3",
     "w-[calc(100%-2rem)]",
     "max-h-[85vh]",
     "fixed",
     "top-[50%]",
     "left-[50%]",
-    "translate-x-[-50%]",
-    "translate-y-[-50%]",
+    // NOTE: translate-* (and other composed-var utilities) resolve against
+    // --en-* defaults that live in the PREFLIGHT — since build.rs ships the
+    // preflight as part of PLATINUM_CSS they now work in both modes, but
+    // remember this test only proves rule-EXISTS, not rule-works. The
+    // dialog's centering pull-back predates that and stays a plain
+    // [data-target] rule in platinum.css.
     "z-100",
     "data-[state=closed]:opacity-0",
     "data-[state=open]:opacity-100",

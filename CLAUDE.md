@@ -1,15 +1,29 @@
 # platinum-ui
 
 Mac OS 8/9 "Platinum" design system for Leptos 0.8 (CSR, nightly): Rust
-components in `src/` + the skin in `platinum.css`. Two consumption modes:
+components in `src/` + the skin in `platinum.css`.
+
+**This is an entire design system, not a widget library — all or nothing.**
+It owns the page it's mounted on: a global reset (Tailwind-style preflight),
+element-level rules, tokens. Never design a component to "fit into" a
+non-Platinum host page, and never add opt-outs that let parts of a page
+escape the system. Consequence: both modes MUST provide a preflight (see
+below) — components are written against that flat baseline, and every bug in
+the "preflight gap" family came from one mode silently missing it.
+
+Two consumption modes:
 
 1. **Tailwind mode** (chdkpano): the app imports the CSS after Tailwind and
    adds this crate's `src` to its `@source` scan (the components emit utility
-   classes; the scan is what gets them generated).
-2. **Standalone mode**: `build.rs` generates the utility CSS at compile time
-   with encre-css (pure-Rust Tailwind v4 generator, preflight off, custom
-   colors registered there); `PLATINUM_CSS` = platinum.css + that output, and
-   `<PlatinumStyles/>` injects it. CONSTRAINT: every utility class a component
+   classes; the scan is what gets them generated). The app's own Tailwind
+   build supplies the preflight — never disable it.
+2. **Standalone mode**: `build.rs` generates, at compile time with encre-css
+   (pure-Rust Tailwind v4 generator, custom colors registered there), BOTH
+   the preflight and the utility CSS; `PLATINUM_CSS` = preflight +
+   platinum.css + utilities (that order: reset loses to skin, utilities win
+   over both), and `<PlatinumStyles/>` injects it. The preflight also carries
+   the `--en-*` variable defaults that composed utilities (translate-*,
+   ring-*, …) resolve against. CONSTRAINT: every utility class a component
    emits must be encre-css-parseable — nested-bracket arbitrary variants like
    `[&_x:not([a='b'])]:…` are not; write those as plain rules in platinum.css
    (see the Button icon-size rule). When adding a utility class to a
@@ -42,8 +56,10 @@ Everything is built from two dual constructions plus composites:
 
 Other pieces: bevels are mitered because they're **borders** (4-value
 `border-color` must be its own declaration — the shorthand takes one color).
-Parts that can't take `::after` (webkit scrollbar, checkboxes) use the 1px
-`--pl-raised-thin`/`--pl-well-thin` box-shadow bevels. The scroll thumb
+Parts that can't take `::after` (the webkit scrollbar) use the 1px
+`--pl-raised-thin`/`--pl-well-thin` box-shadow bevels; checkboxes/radios are
+full well-group members (border bevel + ring), with `::after` free for the
+check/dot glyph since wells need no pseudo-element. The scroll thumb
 recolors the shared `::after` bevel by overriding `--pl-bc-*` (custom props
 inherit into pseudo-elements). `--pl-bw` on any container resizes every bevel
 inside it. `.pl-seam-{top,right,bottom,left}` drop one outline edge where two

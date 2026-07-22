@@ -16,7 +16,7 @@ use wasm_bindgen::closure::Closure;
 use wasm_bindgen::JsCast;
 
 /// Pixels scrolled per arrow-button click.
-const STEP: i32 = 48;
+const STEP: i32 = 24;
 
 /// True while the page is pinch-zoomed. Wheel events then pan the zoomed
 /// visual viewport — a browser-owned motion we must not preventDefault.
@@ -283,6 +283,201 @@ pub fn ScrollWell(
     view! {
         <div class=crate::classes("pl-well pl-well-fitted", &class)>
             <PlatinumScroll welled=true>{children()}</PlatinumScroll>
+        </div>
+    }
+}
+
+/// A multi-line text field wearing the DOM-built Platinum scrollbar (arrows,
+/// autorepeat, draggable accent thumb) — the textarea counterpart of
+/// [`ScrollWell`]. The field's usual well dressing moves to the OUTER frame;
+/// the inner `<textarea>` is stripped bare by a platinum.css rule and scrolls
+/// natively with its native bar hidden, while the bar beside it mirrors the
+/// geometry. Typing (`input`) and scrolling both re-measure; the
+/// ResizeObserver covers size changes.
+///
+/// The caller owns the size: `<PlatinumTextarea class="h-40 w-full"/>`.
+/// Uncontrolled: pass `value` for initial content and read the current text
+/// through `node_ref`.
+#[component]
+pub fn PlatinumTextarea(
+    /// Sizing/extra classes for the outer well box.
+    #[prop(into, optional)] class: String,
+    /// Extra classes for the inner textarea (padding/typography live here).
+    #[prop(into, optional)] textarea_class: String,
+    #[prop(into, optional)] placeholder: String,
+    /// Initial content (uncontrolled — the DOM owns edits afterwards).
+    #[prop(into, optional)] value: String,
+    /// Expose the inner element (read the value, focus it, …).
+    #[prop(optional)] node_ref: NodeRef<html::Textarea>,
+) -> impl IntoView {
+    let track_ref: NodeRef<html::Div> = NodeRef::new();
+    let thumb_ref: NodeRef<html::Div> = NodeRef::new();
+
+    let scroll_top = RwSignal::new(0.0);
+    let scroll_height = RwSignal::new(1.0);
+    let client_height = RwSignal::new(1.0);
+
+    // Mirror the textarea's scroll geometry into signals (see PlatinumScroll
+    // for why try_set: observer callbacks can outlive the instance by one
+    // firing).
+    let refresh = move || {
+        if let Some(el) = node_ref.get_untracked() {
+            scroll_top.try_set(el.scroll_top() as f64);
+            scroll_height.try_set(el.scroll_height().max(1) as f64);
+            client_height.try_set(el.client_height().max(1) as f64);
+        }
+    };
+
+    let step_by = move |delta: i32| {
+        if let Some(el) = node_ref.get_untracked() {
+            el.set_scroll_top(el.scroll_top() + delta);
+        }
+        refresh();
+    };
+
+    // Held-arrow autorepeat, same cadence as PlatinumScroll.
+    let repeat_delay: StoredValue<Option<Timeout>, LocalStorage> = StoredValue::new_local(None);
+    let repeat_tick: StoredValue<Option<Interval>, LocalStorage> = StoredValue::new_local(None);
+    let stop_repeat = move || {
+        repeat_delay.set_value(None);
+        repeat_tick.set_value(None);
+    };
+    let start_repeat = move |delta: i32| {
+        step_by(delta);
+        let t = Timeout::new(REPEAT_DELAY_MS, move || {
+            repeat_tick.set_value(Some(Interval::new(REPEAT_EVERY_MS, move || step_by(delta))));
+        });
+        repeat_delay.set_value(Some(t));
+    };
+
+    // Thumb drag, same mapping as PlatinumScroll.
+    let dragging = RwSignal::new(false);
+    let drag = StoredValue::new((0.0_f64, 0.0_f64, 1.0_f64)); // (start_y, start_scroll, factor)
+
+    let on_thumb_down = move |e: ev::MouseEvent| {
+        e.prevent_default();
+        let (Some(view), Some(track), Some(thumb)) = (
+            node_ref.get_untracked(),
+            track_ref.get_untracked(),
+            thumb_ref.get_untracked(),
+        ) else {
+            return;
+        };
+        let scrollable = (view.scroll_height() - view.client_height()).max(1) as f64;
+        let travel = (track.client_height() - thumb.offset_height()).max(1) as f64;
+        drag.set_value((e.client_y() as f64, view.scroll_top() as f64, scrollable / travel));
+        dragging.set(true);
+    };
+
+    let mv = window_event_listener(ev::mousemove, move |e: ev::MouseEvent| {
+        if !dragging.get_untracked() {
+            return;
+        }
+        if let Some(view) = node_ref.get_untracked() {
+            let (start_y, start_scroll, factor) = drag.get_value();
+            let scrollable = (view.scroll_height() - view.client_height()).max(0) as f64;
+            let next =
+                (start_scroll + (e.client_y() as f64 - start_y) * factor).clamp(0.0, scrollable);
+            view.set_scroll_top(next as i32);
+            refresh();
+        }
+    });
+    let up = window_event_listener(ev::mouseup, move |_| {
+        if dragging.get_untracked() {
+            dragging.set(false);
+        }
+        stop_repeat();
+    });
+
+    let observer: StoredValue<Option<(web_sys::ResizeObserver, Closure<dyn FnMut()>)>, LocalStorage> =
+        StoredValue::new_local(None);
+    let rz = window_event_listener(ev::resize, move |_| refresh());
+    on_cleanup(move || {
+        mv.remove();
+        up.remove();
+        rz.remove();
+        observer.update_value(|o| {
+            if let Some((obs, _cb)) = o.take() {
+                obs.disconnect();
+            }
+        });
+    });
+
+    // First measure + size changes; content growth is caught by on:input.
+    let observer_set = StoredValue::new(false);
+    Effect::new(move |_| {
+        let Some(ta) = node_ref.get() else {
+            return;
+        };
+        if observer_set.get_value() {
+            return;
+        }
+        observer_set.set_value(true);
+        let cb = Closure::<dyn FnMut()>::new(move || refresh());
+        if let Ok(obs) = web_sys::ResizeObserver::new(cb.as_ref().unchecked_ref()) {
+            obs.observe(&ta);
+            observer.set_value(Some((obs, cb)));
+        }
+    });
+
+    let thumb_height = move || (client_height.get() / scroll_height.get() * 100.0).min(100.0);
+    let thumb_top = move || scroll_top.get() / scroll_height.get() * 100.0;
+
+    view! {
+        <div class=crate::classes("pl-well pl-well-fitted", &class)>
+            <div class="pl-scroll">
+                <textarea
+                    class=crate::classes("pl-scroll-view p-3 text-sm", &textarea_class)
+                    node_ref=node_ref
+                    placeholder=placeholder
+                    on:scroll=move |_| refresh()
+                    on:input=move |_| refresh()
+                >
+                    {value}
+                </textarea>
+                <div
+                    class="pl-scrollbar pl-scrollbar-welled"
+                    // The bar is a sibling of the textarea — forward vertical
+                    // wheels to it; zoom/horizontal gestures pass through.
+                    on:wheel=move |e: ev::WheelEvent| {
+                        if e.ctrl_key() || e.delta_x().abs() > e.delta_y().abs() || pinch_zoomed() {
+                            return;
+                        }
+                        e.prevent_default();
+                        if let Some(view) = node_ref.get_untracked() {
+                            let dy = if e.delta_mode() == 1 { e.delta_y() * 33.0 } else { e.delta_y() };
+                            view.set_scroll_top(view.scroll_top() + dy as i32);
+                            refresh();
+                        }
+                    }
+                >
+                    <button
+                        type="button"
+                        class="pl-scroll-arrow pl-scroll-up pl-seam-left pl-seam-top pl-seam-right"
+                        aria-label="Scroll up"
+                        on:mousedown=move |_| start_repeat(-STEP)
+                        on:mouseleave=move |_| stop_repeat()
+                        on:click=move |e: ev::MouseEvent| if e.detail() == 0 { step_by(-STEP) }
+                    ></button>
+                    <div class="pl-scroll-track" node_ref=track_ref>
+                        <div
+                            class="pl-scroll-thumb"
+                            node_ref=thumb_ref
+                            on:mousedown=on_thumb_down
+                            style:height=move || format!("{}%", thumb_height())
+                            style:top=move || format!("{}%", thumb_top())
+                        ></div>
+                    </div>
+                    <button
+                        type="button"
+                        class="pl-scroll-arrow pl-scroll-down pl-seam-left pl-seam-bottom pl-seam-right"
+                        aria-label="Scroll down"
+                        on:mousedown=move |_| start_repeat(STEP)
+                        on:mouseleave=move |_| stop_repeat()
+                        on:click=move |e: ev::MouseEvent| if e.detail() == 0 { step_by(STEP) }
+                    ></button>
+                </div>
+            </div>
         </div>
     }
 }

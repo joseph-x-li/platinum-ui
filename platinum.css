@@ -108,6 +108,7 @@
   --pl-shadow:    #808080;   /* bottom-right bevel edge         */
   --pl-outline:   #555555;   /* hard 1px outer outline          */
   --pl-press:     #c6c6c2;   /* pressed face                    */
+  --pl-ink:       #000000;   /* glyph/label ink on faces + window */
   --pl-purple:      #8e5ba6; /* Platinum accent purple (scroll thumb)   */
   --pl-purple-hi:   #c1a5cf; /* light lavender — purple bevel highlight */
   --pl-purple-lo:   #553764; /* deep purple  — purple bevel shadow      */
@@ -136,19 +137,51 @@
   --pl-well-thin:
     inset  1px  1px 0 var(--pl-shadow),
     inset -1px -1px 0 var(--pl-highlight);
+  /* The same 1px bevels in the accent family (scroll thumbs, plugs). */
+  --pl-purple-raised-thin:
+    inset  1px  1px 0 var(--pl-purple-hi),
+    inset -1px -1px 0 var(--pl-purple-lo);
+  --pl-purple-well-thin:
+    inset  1px  1px 0 var(--pl-purple-lo),
+    inset -1px -1px 0 var(--pl-purple-hi);
 
-  /* Scroll-arrow glyphs (black triangles), shared by the custom DOM scrollbar
-     and the ::-webkit-scrollbar fallback. */
-  --pl-arrow-up:   url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='7'%3E%3Cpath d='M0 7h9L4.5 0z' fill='%23000'/%3E%3C/svg%3E");
-  --pl-arrow-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='7'%3E%3Cpath d='M0 0h9L4.5 7z' fill='%23000'/%3E%3C/svg%3E");
+  /* Arrow glyphs (ink triangles), shared by the custom DOM scrollbar, the
+     ::-webkit-scrollbar fallback, and the popup-select field. Data URIs
+     can't reference custom properties, so the dark palette overrides these
+     wholesale with light-ink twins. */
+  --pl-arrow-up:    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='7'%3E%3Cpath d='M0 7h9L4.5 0z' fill='%23000'/%3E%3C/svg%3E");
+  --pl-arrow-down:  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='7'%3E%3Cpath d='M0 0h9L4.5 7z' fill='%23000'/%3E%3C/svg%3E");
+  --pl-arrow-left:  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='9'%3E%3Cpath d='M7 0v9L0 4.5z' fill='%23000'/%3E%3C/svg%3E");
+  --pl-arrow-right: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='9'%3E%3Cpath d='M0 0v9L7 4.5z' fill='%23000'/%3E%3C/svg%3E");
+  --pl-menu-arrow:  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6'%3E%3Cpath d='M0 0h9L4.5 6z' fill='%23000'/%3E%3C/svg%3E");
+}
+
+/* ---- Dark palette (opt-in): put class="dark" on <html> or any container.
+   The same two dual constructions, relit for a dark room: faces drop to deep
+   grays, the highlight edge dims to a soft light, the shadow edge goes near-
+   black, and ink inverts. The accent purple family is deliberately UNCHANGED
+   — the scroll thumb reads identically in both palettes. */
+.dark {
+  --pl-face:      #3e3e3e;
+  --pl-face-alt:  #333333;
+  --pl-window:    #1e1e1e;
+  --pl-highlight: #6f6f6f;
+  --pl-shadow:    #141414;
+  --pl-outline:   #000000;
+  --pl-press:     #2f2f2f;
+  --pl-ink:       #e8e8e8;
+  --pl-arrow-up:    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='7'%3E%3Cpath d='M0 7h9L4.5 0z' fill='%23e8e8e8'/%3E%3C/svg%3E");
+  --pl-arrow-down:  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='7'%3E%3Cpath d='M0 0h9L4.5 7z' fill='%23e8e8e8'/%3E%3C/svg%3E");
+  --pl-arrow-left:  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='9'%3E%3Cpath d='M7 0v9L0 4.5z' fill='%23e8e8e8'/%3E%3C/svg%3E");
+  --pl-arrow-right: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='9'%3E%3Cpath d='M0 0v9L7 4.5z' fill='%23e8e8e8'/%3E%3C/svg%3E");
+  --pl-menu-arrow:  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6'%3E%3Cpath d='M0 0h9L4.5 6z' fill='%23e8e8e8'/%3E%3C/svg%3E");
 }
 
 /* ---- 1. TOKEN LAYER --------------------------------------- */
-/* Neutral OKLCH grayscale + one navy for focus. Light-only look, so
-   .dark mirrors the same grays. Non-layered so these win over the
-   Tailwind base. */
-:root,
-.dark {
+/* Neutral OKLCH grayscale + one navy for focus. Non-layered so these
+   win over the Tailwind base. The .dark block further down relights
+   them; radius/fonts are shared. */
+:root {
   --radius: 0rem;
   --font-sans: "Geneva", "Arimo", "Helvetica Neue", Helvetica, Arial, sans-serif;
 
@@ -178,6 +211,30 @@
   --warning-foreground:     oklch(0 0 0);
   --success:                oklch(0.60 0.13 150);
   --success-foreground:     oklch(1 0 0);
+}
+
+/* Dark semantic tokens: the same grayscale relit around a deep-gray desktop.
+   Functional colors (destructive/warning/success) keep their light-mode
+   values — they were picked at mid lightness and read on both palettes —
+   and the ring brightens to stay visible on dark faces. */
+.dark {
+  --background:            oklch(0.23 0 0);    /* dark desktop     */
+  --foreground:            oklch(0.93 0 0);    /* near-white text  */
+  --card:                  oklch(0.30 0 0);    /* face gray        */
+  --card-foreground:       oklch(0.93 0 0);
+  --popover:               oklch(0.30 0 0);
+  --popover-foreground:    oklch(0.93 0 0);
+  --primary:               oklch(0.30 0 0);
+  --primary-foreground:    oklch(0.93 0 0);
+  --secondary:             oklch(0.35 0 0);
+  --secondary-foreground:  oklch(0.93 0 0);
+  --muted:                 oklch(0.35 0 0);
+  --muted-foreground:      oklch(0.72 0 0);
+  --accent:                oklch(0.35 0 0);
+  --accent-foreground:     oklch(0.93 0 0);
+  --border:                oklch(0.443 0 0);   /* same mid hairline */
+  --input:                 oklch(0.443 0 0);
+  --ring:                  oklch(0.62 0.12 264);
 }
 
 /* ---- 2. BEVEL LAYER --------------------------------------- */
@@ -210,7 +267,7 @@
   background-color: var(--pl-face) !important;
   transition: none !important;
 }
-[data-name="Button"] { color: #000 !important; }
+[data-name="Button"] { color: var(--pl-ink) !important; }
 /* Default icon size inside buttons: svgs without an explicit size-* utility
    get 1rem. (Was the [&_svg:not([class*='size-'])]:size-4 utility on the
    Button base — the one class string encre-css can't parse, so it lives here
@@ -331,7 +388,7 @@
   padding: 4px 14px 2px;
   font-size: 0.8125rem;
   line-height: 1.2;
-  color: #000;
+  color: var(--pl-ink);
   cursor: pointer;
   position: relative;            /* anchors the active tab's z-index */
   border: 1px solid var(--pl-outline);
@@ -382,7 +439,7 @@ textarea {
 input:not([type="checkbox"]):not([type="radio"]),
 textarea {
   background-color: var(--pl-window) !important;
-  color: #000 !important;
+  color: var(--pl-ink) !important;
 }
 
 /* Fitted well: a well shrunk tight around one piece of content (camera screen,
@@ -479,6 +536,15 @@ body:has(.pl-select-menu) .pl-scroll-view {
   background-color: var(--pl-face) !important;
   box-shadow: 4px 4px 0 0 rgba(0, 0, 0, 0.35) !important;
 }
+/* Dynamic centering, second half: the component pins the box's top-left to
+   the viewport midpoint (fixed + top/left 50%); this pulls it back by half
+   its own size. A plain rule keyed off the stable data-target hook (works
+   for any data_name_prefix) because translate-x-[-50%] utilities are not
+   encre-css-generatable — as component classes they'd silently vanish in
+   standalone mode, parking the dialog off-center. */
+[data-target="target__dialog"] {
+  transform: translate(-50%, -50%);
+}
 
 /* Camera preview screen: a shallow recessed well (hard-edged, no blur) so the
    video reads as set into the device panel — restrained Platinum content well.
@@ -491,41 +557,54 @@ body:has(.pl-select-menu) .pl-scroll-view {
 
 /* Checkboxes / radios: square wells. appearance:none kills the native control
    (whose own rounded box + accent-color was peeking through) so we can draw the
-   square box and the check ourselves. */
+   square box and the check ourselves. The box is the REAL well construction —
+   mitered --pl-bw bevel as the border + the 1px inset outline ring — like any
+   other recessed member; only the glyph is bespoke (::after is free for it
+   because a well, unlike a raised surface, needs no pseudo-element). Sized so
+   the content box stays 12px at the default 2px bevel, where the glyph
+   geometry below is tuned. */
 input[type="checkbox"],
 input[type="radio"] {
   appearance: none;
   -webkit-appearance: none;
   flex: none;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   display: inline-block;
   position: relative;
-  vertical-align: -2px;
+  vertical-align: -3px;
+  /* Chrome's UA stylesheet gives checkboxes/radios margin: 3px 3px 3px 4px;
+     the preflight zeroes it, but stay self-sufficient anyway. */
+  margin: 0;
   border-radius: 0 !important;
-  border: 1px solid var(--pl-outline) !important;
-  box-shadow: var(--pl-well-thin) !important;
+  border-style: solid !important;
+  border-width: var(--pl-bw) !important;
+  border-color: var(--pl-bc-well) !important;
+  box-shadow: var(--pl-outline-inset) !important;
   background-color: var(--pl-window) !important;
   cursor: pointer;
 }
-/* classic check (drawn with borders — crisp, no font dependency) */
+/* classic check (drawn with borders — crisp, no font dependency). Centered
+   relative to the content box (so it stays put at any --pl-bw), with a 1px
+   up-left optical nudge: the stroke sits on the rect's right/bottom edges,
+   which would otherwise pull the visual weight down-right of center. */
 input[type="checkbox"]:checked::after {
   content: "";
   position: absolute;
-  left: 4px;
-  top: 1px;
+  left: 50%;
+  top: 50%;
   width: 4px;
   height: 8px;
-  border: solid #000;
+  border: solid var(--pl-ink);
   border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
+  transform: translate(calc(-50% - 1px), calc(-50% - 1px)) rotate(45deg);
 }
 /* radio: filled square center (Platinum square style) */
 input[type="radio"]:checked::after {
   content: "";
   position: absolute;
   inset: 3px;
-  background: #000;
+  background: var(--pl-ink);
 }
 
 /* Engraved separator: dark line then white line = carved groove */
@@ -574,19 +653,20 @@ textarea:focus-visible {
   box-shadow: var(--pl-well-thin);
 }
 
-/* Raised draggable thumb: hard outline border (all four sides) + raised bevel. */
+/* Raised draggable thumb: hard outline border (all four sides) + raised bevel,
+   in the accent purple family so it matches the DOM-built PlatinumScroll bar. */
 ::-webkit-scrollbar-thumb {
-  background: var(--pl-face);
+  background: var(--pl-purple);
   border: 1px solid var(--pl-outline);
-  box-shadow: var(--pl-raised-thin);
+  box-shadow: var(--pl-purple-raised-thin);
   min-height: 24px;
   min-width: 24px;
 }
 /* Pressed while you click-and-drag it: invert the bevel to a well + darken the
    face, so the thumb visibly depresses under the pointer. */
 ::-webkit-scrollbar-thumb:active {
-  box-shadow: var(--pl-well-thin);
-  background: var(--pl-press);
+  box-shadow: var(--pl-purple-well-thin);
+  background: var(--pl-purple-press);
 }
 
 /* Arrow buttons: outlined beveled squares with a black triangle glyph,
@@ -616,13 +696,26 @@ textarea:focus-visible {
   background-image: var(--pl-arrow-down);
 }
 ::-webkit-scrollbar-button:single-button:horizontal:decrement {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='9'%3E%3Cpath d='M7 0v9L0 4.5z' fill='%23000'/%3E%3C/svg%3E");
+  background-image: var(--pl-arrow-left);
 }
 ::-webkit-scrollbar-button:single-button:horizontal:increment {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='9'%3E%3Cpath d='M0 0v9L7 4.5z' fill='%23000'/%3E%3C/svg%3E");
+  background-image: var(--pl-arrow-right);
 }
 /* Square where a vertical + horizontal bar meet. */
 ::-webkit-scrollbar-corner { background: var(--pl-face-alt); }
+
+/* PlatinumTextarea: the field's well dressing moves to the OUTER frame, so
+   the naked inner textarea must shed the global input/textarea construction
+   (border bevel + ring) or it would double-frame inside the well. Higher
+   specificity beats those !important rules regardless of order. The resize
+   grip is off — it would fight the bar column seated beside it. The window
+   fill stays (from the global rule), keeping the field's white paper. */
+.pl-scroll > textarea.pl-scroll-view {
+  border: 0 !important;
+  box-shadow: none !important;
+  resize: none;
+  display: block;
+}
 
 /* ---- Custom DOM scrollbar (PlatinumScroll) ------------------------------- */
 /* Real arrow buttons + a draggable purple thumb, since CSS scrollbar buttons
@@ -716,7 +809,7 @@ textarea:focus-visible {
   align-items: stretch;
   min-width: 130px;
   font-size: 0.875rem;
-  color: #000;
+  color: var(--pl-ink);
 }
 
 .pl-select-label {
@@ -746,7 +839,7 @@ textarea:focus-visible {
   width: 20px;
   margin: 1px 1px 1px 0;                 /* well-facing sides 1px; label side flush */
   padding: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6'%3E%3Cpath d='M0 0h9L4.5 6z' fill='%23000'/%3E%3C/svg%3E");
+  background-image: var(--pl-menu-arrow);
   background-repeat: no-repeat;
   background-position: center;
   cursor: pointer;
@@ -766,7 +859,7 @@ textarea:focus-visible {
   padding: 2px;
   list-style: none;
   background-color: var(--pl-window);
-  border: 1px solid #000;
+  border: 1px solid var(--pl-ink);
   box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35);
 }
 
@@ -777,12 +870,12 @@ textarea:focus-visible {
   padding: 3px 14px 3px 4px;
   font-size: 0.875rem;
   line-height: 1.3;
-  color: #000;
+  color: var(--pl-ink);
   white-space: nowrap;
   cursor: pointer;
 }
 /* Inverted highlight, the way a Platinum menu tracks the pointer. */
-.pl-select-option:hover { background-color: #000; color: #fff; }
+.pl-select-option:hover { background-color: var(--pl-ink); color: var(--pl-window); }
 
 .pl-select-check { width: 14px; text-align: center; flex: none; }
 
@@ -790,4 +883,20 @@ body {
   font-family: var(--font-sans);
   background-color: var(--background);
   color: var(--foreground);
+}
+
+/* Form controls don't inherit typography by spec — browsers default them to
+   their own face (Arial here). Both modes ship a preflight that papers over
+   this, but the skin normalizes it itself too: harmless duplication that
+   keeps platinum.css self-sufficient about what it depends on.
+   Element-level (no !important), so utility classes still override. */
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  color: inherit;
 }
