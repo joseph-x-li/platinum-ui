@@ -3,7 +3,7 @@ name = "platinum-ui"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.78"
-description = "Mac OS Platinum-styled Leptos component library: buttons, dialog, collapsible, popup select, debounced button, scrollbar/scroll well. Ships with platinum.css; the consumer provides Tailwind and adds this crate's src to its @source scan."
+description = "Mac OS Platinum-styled design system for Leptos: buttons, dialog, collapsible, popup select, debounced button, scrollbar/scroll well, sidebar, textarea. Mount PlatinumStyles once; generate app utilities with platinum-ui-build. No Tailwind/Node toolchain."
 repository = "https://github.com/joseph-x-li/platinum-ui"
 readme = "README.md"
 license = "MIT"
@@ -12,15 +12,15 @@ license = "MIT"
 
 # Workspace root (also keeps cargo from attaching this crate to a parent
 # workspace when it's checked out as a submodule inside another repo). The
-# members are the component showcase: a Trunk-built Leptos app and the tiny
-# static server that hosts its dist/.
+# members are the shared build-script helper, plus the component showcase: a
+# Trunk-built Leptos app and the tiny static server that hosts its dist/.
 [workspace]
-members = ["showcase", "showcase-server"]
+members = ["build-helper", "showcase", "showcase-server"]
 
 [build-dependencies]
-# Pure-Rust Tailwind v4-compatible generator: build.rs compiles the utility
-# classes the components emit, so consumers need no Node/Tailwind toolchain.
-encre-css = "0.20"
+# Shared encre-css configuration (token registry, preflight, font stacks) —
+# the same crate every app's build.rs uses; see build-helper/src/lib.rs.
+platinum-ui-build = { path = "build-helper" }
 
 [dependencies]
 leptos = { version = "0.8", features = ["csr", "nightly"] }

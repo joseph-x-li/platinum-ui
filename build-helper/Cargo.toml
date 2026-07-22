@@ -1,0 +1,11 @@
+[package]
+name = "platinum-ui-build"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.78"
+description = "Build-script helper for apps on the platinum-ui design system: pre-configured encre-css utility generation (design-token registry, preflight, font stacks)."
+repository = "https://github.com/joseph-x-li/platinum-ui"
+license = "MIT"
+
+[dependencies]
+encre-css = "0.20"

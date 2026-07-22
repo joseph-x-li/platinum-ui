@@ -1195,10 +1195,10 @@ name = "platinum-showcase"
 version = "0.1.0"
 dependencies = [
  "console_error_panic_hook",
- "encre-css",
  "gloo-timers",
  "leptos",
  "platinum-ui",
+ "platinum-ui-build",
  "wasm-bindgen",
  "web-sys",
 ]
@@ -1215,13 +1215,20 @@ dependencies = [
 name = "platinum-ui"
 version = "0.1.0"
 dependencies = [
- "encre-css",
  "gloo-timers",
  "js-sys",
  "leptos",
+ "platinum-ui-build",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
+]
+
+[[package]]
+name = "platinum-ui-build"
+version = "0.1.0"
+dependencies = [
+ "encre-css",
 ]
 
 [[package]]

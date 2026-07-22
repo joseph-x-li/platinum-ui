@@ -19,10 +19,12 @@ preflight carries the `--en-*` variable defaults that composed utilities
 (translate-*, ring-*, …) resolve against — components are written against
 that flat baseline, never against browser UA defaults (the historical
 "preflight gap" bug family came from one consumer missing it). Apps generate
-utilities for their OWN markup the same way — encre-css over their sources
-in their build.rs, injected as a second `<style>` after `<PlatinumStyles/>`
-(showcase/build.rs is the canonical example; chdkpano/client does the same).
-CONSTRAINT: every utility class a component
+utilities for their OWN markup the same way, injected as a second `<style>`
+after `<PlatinumStyles/>` — their build.rs is one call into the shared
+`build-helper/` crate (`platinum_ui_build::generate_utilities("src", …)`),
+which owns the token registry and font stacks; add new platinum.css tokens
+to `TOKENS` there and every app picks them up. CONSTRAINT: every utility
+class a component
    emits must be encre-css-parseable — nested-bracket arbitrary variants like
    `[&_x:not([a='b'])]:…` are not; write those as plain rules in platinum.css
    (see the Button icon-size rule). When adding a utility class to a
