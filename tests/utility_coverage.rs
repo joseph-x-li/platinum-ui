@@ -96,6 +96,35 @@ const EMITTED_UTILITIES: &[&str] = &[
     "min-h-0",
     // platinum_scroll.rs — content wrapper
     "min-h-full",
+    // platinum_meter.rs
+    "relative",
+    "inset-y-0",
+    "left-0",
+    "bg-success",
+    "bg-destructive",
+    // platinum_info.rs — PropertyList / Property / StatWell
+    "grid-cols-[auto_1fr]",
+    "gap-x-4",
+    "gap-y-2",
+    "items-baseline",
+    "text-xs",
+    "uppercase",
+    "tracking-wide",
+    "font-mono",
+    "break-all",
+    "tabular-nums",
+    // platinum_shell.rs
+    "h-screen",
+    "py-4",
+    "gap-6",
+    "tracking-tight",
+    "ml-auto",
+    "flex-1",
+    "h-full",
+    "py-6",
+    "w-full",
+    "max-w-6xl",
+    "mx-auto",
 ];
 
 /// Spot checks that the hand-written skin made it into the concatenation.

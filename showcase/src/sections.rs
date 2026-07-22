@@ -6,6 +6,8 @@ use leptos::ev;
 use leptos::prelude::*;
 
 use platinum_ui::debounce_button::{boxed, DebounceButton};
+use platinum_ui::platinum_info::{Property, PropertyList, StatWell};
+use platinum_ui::platinum_meter::Meter;
 use platinum_ui::platinum_scroll::{PlatinumTextarea, ScrollWell};
 use platinum_ui::platinum_select::PlatinumSelect;
 use platinum_ui::ui_button;
@@ -334,6 +336,38 @@ pub fn ContainersSection() -> impl IntoView {
                 <span class="text-base leading-none text-warning">"⚠"</span>
                 <span class="text-xs font-medium text-warning">"No signal"</span>
                 <span class="text-[10px] font-mono text-white/50">"12 failed"</span>
+            </div>
+        </ComponentSection>
+
+        <ComponentSection title="Meter">
+            <p class="text-xs text-muted-foreground mb-3 max-w-md">
+                "A recessed level indicator; the fill drops to the destructive "
+                "color at the danger threshold. Caller sizes the track."
+            </p>
+            <div class="flex items-center gap-6">
+                <Meter fraction=0.85 danger_below=0.2 class="w-24 h-2" title="85%"/>
+                <Meter fraction=0.45 danger_below=0.2 class="w-24 h-2" title="45%"/>
+                <Meter fraction=0.12 danger_below=0.2 class="w-24 h-2" title="12% — danger"/>
+                <Meter fraction=0.62 class="w-6 h-2" title="battery-sized"/>
+            </div>
+        </ComponentSection>
+
+        <ComponentSection title="Stat wells">
+            <div class="grid grid-cols-3 gap-3 max-w-md text-sm">
+                <StatWell label="operations">{62}</StatWell>
+                <StatWell label="events">{14}</StatWell>
+                <StatWell label="props">{51}</StatWell>
+            </div>
+        </ComponentSection>
+
+        <ComponentSection title="Property list">
+            <div class="max-w-md">
+                <PropertyList>
+                    <Property label="firmware" value="1.01a".to_string() mono=true/>
+                    <Property label="serial" value="C8A2FF01B4E29D77".to_string() mono=true/>
+                    <Property label="model" value="Canon PowerShot ELPH 180".to_string()/>
+                    <Property label="notes" value="".to_string()/>
+                </PropertyList>
             </div>
         </ComponentSection>
     }

@@ -20,18 +20,26 @@
 
 use leptos::prelude::*;
 
+pub mod dark_mode;
 pub mod debounce_button;
+pub mod platinum_info;
+pub mod platinum_meter;
 pub mod platinum_scroll;
 pub mod platinum_select;
+pub mod platinum_shell;
 pub mod platinum_sidebar;
 pub mod ui_button;
 pub mod ui_collapsible;
 pub mod ui_dialog;
 
 // Flat re-exports for the common case.
+pub use dark_mode::use_dark_mode;
 pub use debounce_button::{boxed, BoxFut, DebounceButton, DEBOUNCE_MS};
+pub use platinum_info::{Property, PropertyList, StatWell};
+pub use platinum_meter::Meter;
 pub use platinum_scroll::{PlatinumScroll, PlatinumTextarea, ScrollWell};
 pub use platinum_select::PlatinumSelect;
+pub use platinum_shell::Shell;
 pub use platinum_sidebar::Sidebar;
 pub use ui_button::{Button, ButtonSize, ButtonVariant};
 pub use ui_collapsible::{Collapsible, CollapsibleContent, CollapsibleTrigger};

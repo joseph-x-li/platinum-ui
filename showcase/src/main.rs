@@ -37,22 +37,8 @@ fn App() -> impl IntoView {
     let selected = RwSignal::new(0usize);
     // Live bevel width (px) — drives --pl-bw for every demo at once.
     let bevel = RwSignal::new(2u32);
-    // Dark palette toggle: mirrors the signal onto <html class="dark">, the
-    // library's opt-in hook for its dark token set.
-    let dark = RwSignal::new(false);
-    Effect::new(move |_| {
-        let on = dark.get();
-        if let Some(root) = web_sys::window()
-            .and_then(|w| w.document())
-            .and_then(|d| d.document_element())
-        {
-            let _ = if on {
-                root.class_list().add_1("dark")
-            } else {
-                root.class_list().remove_1("dark")
-            };
-        }
-    });
+    // Dark palette toggle — the library hook mirrors this onto <html class="dark">.
+    let dark = platinum_ui::use_dark_mode();
 
     view! {
         <PlatinumStyles/>

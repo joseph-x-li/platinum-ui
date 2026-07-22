@@ -107,6 +107,15 @@ ring stay full-strength (so no `disabled:opacity-*` utilities on the whole box).
   (data-attribute machinery), not Leptos signals. Render dialogs OUTSIDE any
   `Transition`/`Suspend` content that refetches, or the rebuild snaps them shut.
   The layout wrappers (DialogBody etc.) come from the local `wrapper!` macro.
+- `platinum_meter.rs` / `platinum_info.rs`: display widgets (Meter level
+  indicator; PropertyList/Property key-value rows; StatWell) — NOT reactive
+  on their own; rebuild them inside a reactive closure. Callers size the
+  Meter track via `class` (no default, per the no-utility-conflicts rule).
+- `platinum_shell.rs`: the full-viewport app window (pinned header platform +
+  palette nav + FIXED content pane; pages own scrolling off its h-full
+  chain). `title`/`nav`/`aside` are ViewFn slots; `content_class` REPLACES
+  the centered max-w-6xl wrapper rather than appending. `dark_mode.rs`:
+  `use_dark_mode()` mirrors a signal onto `<html class="dark">`.
 - `platinum_scroll.rs` / `platinum_select.rs`: hand-drawn scrollbar and popup
   menu (CSS scrollbar buttons don't render on macOS Chrome; native `<select>`
   was dropped entirely). Their arrow buttons are members of the raised group,
