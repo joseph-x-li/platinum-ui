@@ -40,7 +40,8 @@ fn main() {
     // see this file — their own Tailwind build provides the preflight.
     let mut preflight_config = encre_css::Config::default();
     preflight_config.preflight = encre_css::Preflight::new_full()
-        .font_family_sans(r#""Geneva", "Arimo", "Helvetica Neue", Helvetica, Arial, sans-serif"#);
+        .font_family_sans(r#""Geneva", "Arimo", "Helvetica Neue", Helvetica, Arial, sans-serif"#)
+        .font_family_mono(r#""Monaco", "Cousine", "Menlo", ui-monospace, SFMono-Regular, monospace"#);
     let preflight = encre_css::generate([], &preflight_config);
     let out_dir = std::env::var("OUT_DIR").expect("OUT_DIR");
     std::fs::write(

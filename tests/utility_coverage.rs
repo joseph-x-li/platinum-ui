@@ -53,9 +53,9 @@ const EMITTED_UTILITIES: &[&str] = &[
     "top-[50%]",
     "left-[50%]",
     // NOTE: translate-* (and other composed-var utilities) resolve against
-    // --en-* defaults that live in the PREFLIGHT — since build.rs ships the
-    // preflight as part of PLATINUM_CSS they now work in both modes, but
-    // remember this test only proves rule-EXISTS, not rule-works. The
+    // --en-* defaults that live in the PREFLIGHT — build.rs ships it as part
+    // of PLATINUM_CSS so they do work, but remember this test only proves
+    // rule-EXISTS, not rule-works. The
     // dialog's centering pull-back predates that and stays a plain
     // [data-target] rule in platinum.css.
     "z-100",

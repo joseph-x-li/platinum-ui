@@ -7,23 +7,22 @@ components in `src/` + the skin in `platinum.css`.
 It owns the page it's mounted on: a global reset (Tailwind-style preflight),
 element-level rules, tokens. Never design a component to "fit into" a
 non-Platinum host page, and never add opt-outs that let parts of a page
-escape the system. Consequence: both modes MUST provide a preflight (see
-below) — components are written against that flat baseline, and every bug in
-the "preflight gap" family came from one mode silently missing it.
+escape the system.
 
-Two consumption modes:
-
-1. **Tailwind mode** (chdkpano): the app imports the CSS after Tailwind and
-   adds this crate's `src` to its `@source` scan (the components emit utility
-   classes; the scan is what gets them generated). The app's own Tailwind
-   build supplies the preflight — never disable it.
-2. **Standalone mode**: `build.rs` generates, at compile time with encre-css
-   (pure-Rust Tailwind v4 generator, custom colors registered there), BOTH
-   the preflight and the utility CSS; `PLATINUM_CSS` = preflight +
-   platinum.css + utilities (that order: reset loses to skin, utilities win
-   over both), and `<PlatinumStyles/>` injects it. The preflight also carries
-   the `--en-*` variable defaults that composed utilities (translate-*,
-   ring-*, …) resolve against. CONSTRAINT: every utility class a component
+**One consumption path** (there used to be a Tailwind-import mode; it was
+removed — no Tailwind/Node anywhere): `build.rs` generates, at compile time
+with encre-css (pure-Rust Tailwind v4 generator, custom colors registered
+there), BOTH the preflight and the utility CSS; `PLATINUM_CSS` = preflight +
+platinum.css + utilities (that order: reset loses to skin, utilities win
+over both), and the app mounts `<PlatinumStyles/>` once to inject it. The
+preflight carries the `--en-*` variable defaults that composed utilities
+(translate-*, ring-*, …) resolve against — components are written against
+that flat baseline, never against browser UA defaults (the historical
+"preflight gap" bug family came from one consumer missing it). Apps generate
+utilities for their OWN markup the same way — encre-css over their sources
+in their build.rs, injected as a second `<style>` after `<PlatinumStyles/>`
+(showcase/build.rs is the canonical example; chdkpano/client does the same).
+CONSTRAINT: every utility class a component
    emits must be encre-css-parseable — nested-bracket arbitrary variants like
    `[&_x:not([a='b'])]:…` are not; write those as plain rules in platinum.css
    (see the Button icon-size rule). When adding a utility class to a
@@ -117,9 +116,9 @@ ring stay full-strength (so no `disabled:opacity-*` utilities on the whole box).
 
 ## The showcase
 
-The living style guide is the `showcase/` workspace member (standalone mode:
-`PlatinumStyles` + its own build.rs-generated utilities for showcase-only
-classes), served by `showcase-server/` (axum static + SPA fallback,
+The living style guide is the `showcase/` workspace member (`PlatinumStyles`
++ its own build.rs-generated utilities for showcase-only classes), served by
+`showcase-server/` (axum static + SPA fallback,
 `SHOWCASE_ADDR`, default 127.0.0.1:3050). Build and run from the repo root:
 `(cd showcase && trunk build)` then `cargo run -p platinum-showcase-server`.
 Navigation is the library's own `Sidebar` (`platinum_sidebar.rs`) — a vertical

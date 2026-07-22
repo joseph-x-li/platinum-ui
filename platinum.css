@@ -1,47 +1,8 @@
 /* platinum-ui — the Mac OS Platinum design system (tokens + bevels + custom
-   components). Consumed by an app that provides Tailwind: the app's stylesheet
-   does `@import "tailwindcss";` then `@import ".../platinum.css";` and adds this
-   crate's `src` to Tailwind's `@source` scan so the utility classes the
-   components emit get generated. */
-
-/* ============================================================
-   Tailwind v4 theme mapping — makes the shadcn CSS vars below
-   drive the utility classes the app uses (bg-*, text-*, border-*,
-   rounded-*). WITHOUT this block those utilities don't pick up the
-   tokens, and without @import "tailwindcss" no utilities exist at all.
-   ============================================================ */
-@theme {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-warning: var(--warning);
-  --color-warning-foreground: var(--warning-foreground);
-  --color-success: var(--success);
-  --color-success-foreground: var(--success-foreground);
-  /* Monaco — the canonical classic-Mac monospace — for all font-mono text;
-     bundled Cousine covers non-Apple machines. */
-  --font-mono: "Monaco", "Cousine", "Menlo", ui-monospace, SFMono-Regular, monospace;
-  /* every radius step follows --radius (0 = square) */
-  --radius-sm: var(--radius);
-  --radius-md: var(--radius);
-  --radius-lg: var(--radius);
-  --radius-xl: var(--radius);
-  --radius-2xl: var(--radius);
-}
+   components). The ONLY consumption path is `<PlatinumStyles/>`, which injects
+   preflight + this file + build.rs-generated utility CSS (encre-css); apps
+   generate their own extra utilities the same way (see showcase/build.rs).
+   No Tailwind toolchain anywhere. */
 
 /* ============================================================
    platinum.css — Mac OS 8/9 "Platinum" reskin, ADAPTED to this
@@ -573,9 +534,6 @@ input[type="radio"] {
   display: inline-block;
   position: relative;
   vertical-align: -3px;
-  /* Chrome's UA stylesheet gives checkboxes/radios margin: 3px 3px 3px 4px;
-     the preflight zeroes it, but stay self-sufficient anyway. */
-  margin: 0;
   border-radius: 0 !important;
   border-style: solid !important;
   border-width: var(--pl-bw) !important;
@@ -885,18 +843,12 @@ body {
   color: var(--foreground);
 }
 
-/* Form controls don't inherit typography by spec — browsers default them to
-   their own face (Arial here). Both modes ship a preflight that papers over
-   this, but the skin normalizes it itself too: harmless duplication that
-   keeps platinum.css self-sufficient about what it depends on.
-   Element-level (no !important), so utility classes still override. */
-button,
-input,
-textarea,
-select {
-  font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
-  letter-spacing: inherit;
-  color: inherit;
+/* Monaco — the canonical classic-Mac monospace; bundled Cousine covers
+   non-Apple machines. !important because encre-css hardcodes the .font-mono
+   utility's stack (it isn't theme-configurable) and generated utilities are
+   concatenated AFTER this file in PLATINUM_CSS. The element list matches the
+   preflight's code/kbd/samp/pre rule, whose stack build.rs also points here. */
+.font-mono,
+code, kbd, samp, pre {
+  font-family: "Monaco", "Cousine", "Menlo", ui-monospace, SFMono-Regular, monospace !important;
 }
