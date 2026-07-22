@@ -19,6 +19,7 @@ use leptos::prelude::*;
 pub mod debounce_button;
 pub mod platinum_scroll;
 pub mod platinum_select;
+pub mod platinum_sidebar;
 pub mod ui_button;
 pub mod ui_collapsible;
 pub mod ui_dialog;
@@ -27,6 +28,7 @@ pub mod ui_dialog;
 pub use debounce_button::{boxed, BoxFut, DebounceButton, DEBOUNCE_MS};
 pub use platinum_scroll::{PlatinumScroll, ScrollWell};
 pub use platinum_select::PlatinumSelect;
+pub use platinum_sidebar::Sidebar;
 pub use ui_button::{Button, ButtonSize, ButtonVariant};
 pub use ui_collapsible::{Collapsible, CollapsibleContent, CollapsibleTrigger};
 

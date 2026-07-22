@@ -99,11 +99,22 @@ ring stay full-strength (so no `disabled:opacity-*` utilities on the whole box).
   the divider, arrow seams face the well ring. Caller sets the size via
   `class`.
 
+## The showcase
+
+The living style guide is the `showcase/` workspace member (standalone mode:
+`PlatinumStyles` + its own build.rs-generated utilities for showcase-only
+classes), served by `showcase-server/` (axum static + SPA fallback,
+`SHOWCASE_ADDR`, default 127.0.0.1:3050). Build and run from the repo root:
+`(cd showcase && trunk build)` then `cargo run -p platinum-showcase-server`.
+Navigation is the library's own `Sidebar` (`platinum_sidebar.rs`) — a vertical
+palette dual: cells drop their outline, the strip's #555 background is the
+divider/frame, active entry takes `aria-current="page"` → pressed.
+
 ## Verifying changes
 
-The dev server serves the client's `dist/` statically — run `trunk build` in
-`chdkpano/client` after every change here (there is no watch). Hashed bundle
-filenames identify stale browser console entries: filter console reads by the
-new hash before trusting errors, and cache-bust reloads with `?v=N`. The living
-style guide at `/components` (UI tab in the nav) showcases every control and
-both bevel constructions; eyeball it plus computed-style probes after CSS work.
+For the showcase: `trunk build` in `showcase/` (no watch), then eyeball at
+:3050 plus computed-style probes after CSS work. When consumed by chdkpano,
+also run `trunk build` in `chdkpano/client` — its dev server serves `dist/`
+statically. Hashed bundle filenames identify stale browser console entries:
+filter console reads by the new hash before trusting errors, and cache-bust
+reloads with `?v=N`.

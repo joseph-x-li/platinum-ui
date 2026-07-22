@@ -1,0 +1,17 @@
+[package]
+name = "platinum-showcase"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Living style guide for platinum-ui: every component and construction, served standalone."
+
+[dependencies]
+leptos = { version = "0.8", features = ["csr", "nightly"] }
+platinum-ui = { path = ".." }
+gloo-timers = { version = "0.3", features = ["futures"] }
+console_error_panic_hook = "0.1"
+wasm-bindgen = "=0.2.121"
+web-sys = { version = "=0.3.98", features = ["HtmlInputElement"] }
+
+[build-dependencies]
+encre-css = "0.20"

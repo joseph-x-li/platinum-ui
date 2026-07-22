@@ -439,6 +439,27 @@ textarea {
   padding: 1px;
 }
 
+/* ---- Sidebar: vertical strip of raised entries (palette's vertical dual) - */
+/* <nav class="pl-sidebar"> of [data-name="Button"] cells. Same construction
+   as .pl-palette turned 90°: the strip owns the outer frame ring, the 1px
+   gaps show its #555 background as horizontal dividers, and every cell keeps
+   its raised bevel while dropping its own outline border. The active entry
+   takes aria-current="page" → the raised group's pressed state. fit-content
+   height so a flex-row layout doesn't stretch the strip past its entries. */
+.pl-sidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1px;
+  height: fit-content;
+  background-color: var(--pl-outline);
+  box-shadow: 0 0 0 1px var(--pl-outline);
+}
+.pl-sidebar > [data-name="Button"] {
+  border-width: 0 !important;
+  justify-content: flex-start !important;
+}
+
 /* Lock every scroll pane while a dialog — or a popup menu — is open (the
    fixed backdrop alone doesn't stop wheel-scrolling the pane behind it, and
    the fixed-position menu would drift away from its field). */

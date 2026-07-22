@@ -10,9 +10,12 @@ license = "MIT"
 # The bundled fonts/ are Apache-2.0 (Arimo/Cousine); their LICENSE files ship
 # with the crate.
 
-# Standalone workspace root — also keeps cargo from attaching this crate to a
-# parent workspace when it's checked out as a submodule inside another repo.
+# Workspace root (also keeps cargo from attaching this crate to a parent
+# workspace when it's checked out as a submodule inside another repo). The
+# members are the component showcase: a Trunk-built Leptos app and the tiny
+# static server that hosts its dist/.
 [workspace]
+members = ["showcase", "showcase-server"]
 
 [build-dependencies]
 # Pure-Rust Tailwind v4-compatible generator: build.rs compiles the utility
