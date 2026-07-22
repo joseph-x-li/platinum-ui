@@ -8,6 +8,7 @@
 //! content. Arrows step the scroll; the thumb drags it; the wheel/keys still
 //! scroll the inner element natively and we mirror that via its scroll event.
 
+use gloo_timers::callback::{Interval, Timeout};
 use leptos::ev;
 use leptos::html;
 use leptos::prelude::*;
@@ -16,6 +17,18 @@ use wasm_bindgen::JsCast;
 
 /// Pixels scrolled per arrow-button click.
 const STEP: i32 = 48;
+
+/// True while the page is pinch-zoomed. Wheel events then pan the zoomed
+/// visual viewport — a browser-owned motion we must not preventDefault.
+fn pinch_zoomed() -> bool {
+    web_sys::window()
+        .and_then(|w| w.visual_viewport())
+        .map(|v| v.scale() > 1.001)
+        .unwrap_or(false)
+}
+/// Held arrow button: pause before autorepeat kicks in, then tick cadence.
+const REPEAT_DELAY_MS: u32 = 350;
+const REPEAT_EVERY_MS: u32 = 60;
 
 #[component]
 pub fn PlatinumScroll(
@@ -57,6 +70,24 @@ pub fn PlatinumScroll(
         refresh();
     };
 
+    // Held arrow autorepeat, classic Mac style: one step on press, a beat,
+    // then steady ticking until release. The handles cancel on drop, so
+    // clearing the stores (or component disposal) stops the repeat. Local
+    // storage — Timeout/Interval are not Send.
+    let repeat_delay: StoredValue<Option<Timeout>, LocalStorage> = StoredValue::new_local(None);
+    let repeat_tick: StoredValue<Option<Interval>, LocalStorage> = StoredValue::new_local(None);
+    let stop_repeat = move || {
+        repeat_delay.set_value(None);
+        repeat_tick.set_value(None);
+    };
+    let start_repeat = move |delta: i32| {
+        step_by(delta);
+        let t = Timeout::new(REPEAT_DELAY_MS, move || {
+            repeat_tick.set_value(Some(Interval::new(REPEAT_EVERY_MS, move || step_by(delta))));
+        });
+        repeat_delay.set_value(Some(t));
+    };
+
     // Thumb drag. We capture the starting pointer Y, the starting scrollTop, and
     // a factor mapping thumb-pixels → content-pixels, then follow the mouse via
     // window listeners (so the drag continues outside the thumb).
@@ -95,6 +126,8 @@ pub fn PlatinumScroll(
         if dragging.get_untracked() {
             dragging.set(false);
         }
+        // Also ends a held arrow button, wherever the pointer is released.
+        stop_repeat();
     });
     // Observer + its closure live here so unmount can tear them down — this
     // component used to be app-lifetime (the old whole-pane scroller) and got
@@ -164,6 +197,10 @@ pub fn PlatinumScroll(
 
     view! {
         <div class="pl-scroll">
+            // Scrolling is fully native: wheel, keys, momentum, chaining,
+            // latching, pinch-zoom and zoomed panning are all the browser's.
+            // We only MIRROR the geometry (scroll event + ResizeObserver)
+            // into the hand-drawn bar, and write scrollTop from its parts.
             <div class="pl-scroll-view" node_ref=view_ref on:scroll=move |_| refresh()>
                 // Wrapper exists so the ResizeObserver has a single element whose
                 // height tracks the content (the view's own height is fixed). It's
@@ -176,11 +213,23 @@ pub fn PlatinumScroll(
             <div
                 class=if welled { "pl-scrollbar pl-scrollbar-welled" } else { "pl-scrollbar" }
                 class:pl-scrollbar-hidden=move || !welled && !scrollable()
-                // Native scrollbars scroll the content when you wheel over them;
-                // this bar is a separate element, so forward its wheel to the view.
+                // Native scrollbars scroll the content when you wheel over
+                // them; this bar is a separate element (a SIBLING of the
+                // view, so it's not in the view's scroll chain) — forward
+                // its vertical wheel to the view. preventDefault, or the
+                // browser's default action would scroll an OUTER scroller
+                // on top of the forward. Zoom/horizontal/zoomed-pan wheels
+                // pass through untouched, same as anywhere else.
                 on:wheel=move |e: ev::WheelEvent| {
+                    if e.ctrl_key() || e.delta_x().abs() > e.delta_y().abs() || pinch_zoomed() {
+                        return;
+                    }
+                    e.prevent_default();
                     if let Some(view) = view_ref.get_untracked() {
-                        view.set_scroll_top(view.scroll_top() + e.delta_y() as i32);
+                        // Firefox reports line deltas (mode 1); normalize.
+                        let dy = if e.delta_mode() == 1 { e.delta_y() * 33.0 } else { e.delta_y() };
+                        view.set_scroll_top(view.scroll_top() + dy as i32);
+                        refresh();
                     }
                 }
             >
@@ -188,7 +237,11 @@ pub fn PlatinumScroll(
                     type="button"
                     class=format!("pl-scroll-arrow pl-scroll-up {up_seams}")
                     aria-label="Scroll up"
-                    on:click=move |_| step_by(-STEP)
+                    on:mousedown=move |_| start_repeat(-STEP)
+                    on:mouseleave=move |_| stop_repeat()
+                    // Mouse presses are handled (and repeated) via mousedown;
+                    // click stays for keyboard activation only (detail == 0).
+                    on:click=move |e: ev::MouseEvent| if e.detail() == 0 { step_by(-STEP) }
                 ></button>
                 <div class="pl-scroll-track" node_ref=track_ref>
                     <div
@@ -203,7 +256,9 @@ pub fn PlatinumScroll(
                     type="button"
                     class=format!("pl-scroll-arrow pl-scroll-down {down_seams}")
                     aria-label="Scroll down"
-                    on:click=move |_| step_by(STEP)
+                    on:mousedown=move |_| start_repeat(STEP)
+                    on:mouseleave=move |_| stop_repeat()
+                    on:click=move |e: ev::MouseEvent| if e.detail() == 0 { step_by(STEP) }
                 ></button>
             </div>
         </div>
